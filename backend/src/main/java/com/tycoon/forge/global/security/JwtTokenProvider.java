@@ -16,7 +16,7 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${spring.application.name:ForgeTycoonSecretKeyForDevelopmentPurposeOnly1234567890}")
+    @Value("${jwt.secret:ForgeTycoonSecretKeyForDevelopmentPurposeOnly1234567890}")
     private String secretKeyString;
 
     private SecretKey secretKey;
