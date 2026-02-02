@@ -13,7 +13,7 @@ interface RankingModalProps {
   onClose: () => void;
 }
 
-const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }) => {
+const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }: RankingModalProps) => {
   const [activeTab, setActiveTab] = useState<'LEVEL' | 'RICH'>('LEVEL');
   const [rankings, setRankings] = useState<UserRank[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,8 +57,8 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={() => setActiveTab('LEVEL')}
             className={`flex-1 py-2 text-center ${activeTab === 'LEVEL'
-                ? 'text-yellow-400 border-b-2 border-yellow-400 font-bold'
-                : 'text-gray-400 hover:text-gray-200'
+              ? 'text-yellow-400 border-b-2 border-yellow-400 font-bold'
+              : 'text-gray-400 hover:text-gray-200'
               }`}
           >
             Top Smith
@@ -66,8 +66,8 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={() => setActiveTab('RICH')}
             className={`flex-1 py-2 text-center ${activeTab === 'RICH'
-                ? 'text-yellow-400 border-b-2 border-yellow-400 font-bold'
-                : 'text-gray-400 hover:text-gray-200'
+              ? 'text-yellow-400 border-b-2 border-yellow-400 font-bold'
+              : 'text-gray-400 hover:text-gray-200'
               }`}
           >
             Rich Smith
@@ -90,7 +90,7 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }) => {
                 </tr>
               </thead>
               <tbody>
-                {rankings.map((user, index) => (
+                {rankings.map((user: UserRank, index: number) => (
                   <tr key={user.id} className="border-b border-gray-700 hover:bg-gray-700">
                     <td className="py-3">
                       {index + 1 === 1 ? '🥇' : index + 1 === 2 ? '🥈' : index + 1 === 3 ? '🥉' : index + 1}

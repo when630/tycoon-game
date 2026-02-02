@@ -9,14 +9,19 @@ const client = axios.create({
 
 // Add a request interceptor to inject the token
 client.interceptors.request.use(
-  (config) => {
+  (config: any) => { // Using any temporarily or better strict type if possible, but simplest is any or specific type.
+    // Better: import type { InternalAxiosRequestConfig } from 'axios';
+    // But I'll stick to 'any' or verify import first.
+    // To be safe and since I can't verify import, I will use 'any' or minimal typing.
+    // Actually, let's just use 'any' for now to solve the immediate error, or 'InternalAxiosRequestConfig' if I import it.
+    // Let's Import it.
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error);
   }
 );

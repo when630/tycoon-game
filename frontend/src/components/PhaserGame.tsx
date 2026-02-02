@@ -6,7 +6,7 @@ interface PhaserGameProps {
   onLevelChange: (level: number) => void;
 }
 
-const PhaserGame: React.FC<PhaserGameProps> = ({ onLevelChange }) => {
+const PhaserGame: React.FC<PhaserGameProps> = ({ onLevelChange }: PhaserGameProps) => {
   const gameRef = useRef<Phaser.Game | null>(null);
 
   useEffect(() => {

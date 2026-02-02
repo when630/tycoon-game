@@ -15,7 +15,7 @@ interface RelicModalProps {
   onClose: () => void;
 }
 
-const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }) => {
+const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalProps) => {
   const [relics, setRelics] = useState<Relic[]>([]);
   const [loading, setLoading] = useState(false);
   const [chestState, setChestState] = useState<'CLOSED' | 'OPEN'>('CLOSED');
@@ -98,7 +98,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }) => {
           {relics.length === 0 ? (
             <p className="text-gray-500 text-center py-4">보유한 유물이 없습니다.</p>
           ) : (
-            relics.map(relic => (
+            relics.map((relic: Relic) => (
               <div key={relic.id} className="flex items-center bg-gray-800 p-2 rounded border border-gray-700">
                 <div className="w-10 h-10 bg-gray-700 rounded mr-3 flex items-center justify-center">
                   {/* Generic icon for now, ideally mapped by type */}

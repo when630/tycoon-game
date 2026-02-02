@@ -10,3 +10,8 @@ Thumbs.db
 
 ### Docker ###
 docker-compose.override.yml
+
+# Local Node.js
+node_linux/
+node-v20.*
+frontend/node

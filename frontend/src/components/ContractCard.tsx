@@ -14,7 +14,7 @@ interface ContractCardProps {
   onComplete: () => void; // Callback when contract is completed
 }
 
-const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete }) => {
+const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete }: ContractCardProps) => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(false);
   const [npcImage, setNpcImage] = useState('/assets/npc_knight.png');
