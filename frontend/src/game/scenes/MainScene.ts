@@ -10,7 +10,9 @@ export class MainScene extends Phaser.Scene {
   private anvil!: Phaser.GameObjects.Image;
   private sword!: Phaser.GameObjects.Sprite;
   private hammer!: Phaser.GameObjects.Image;
-  private particleEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private successEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private failEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private destroyEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   // UI Elements
   private levelText!: Phaser.GameObjects.Text;
@@ -32,7 +34,9 @@ export class MainScene extends Phaser.Scene {
     this.load.image('background', '/assets/background.png');
     this.load.image('anvil', '/assets/anvil.png');
     this.load.image('hammer', '/assets/hammer.png');
-    this.load.image('particle', '/assets/particle.png');
+    this.load.image('particle_success', '/assets/particle_success.png');
+    this.load.image('particle_failure', '/assets/particle_failure.png');
+    this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
     // Assuming 1024 width for 4 frames = 256px frame width
     this.load.spritesheet('sword', '/assets/sword_sheet.png', {
@@ -66,10 +70,27 @@ export class MainScene extends Phaser.Scene {
     this.hammer.setVisible(false);
 
     // 5. Particles
-    this.particleEmitter = this.add.particles(0, 0, 'particle', {
-      speed: 100,
-      scale: { start: 0.5, end: 0 },
+    // 5. Particles
+    this.successEmitter = this.add.particles(0, 0, 'particle_success', {
+      speed: { min: 150, max: 250 },
+      scale: { start: 0.6, end: 0 },
       blendMode: 'ADD',
+      emitting: false
+    });
+
+    this.failEmitter = this.add.particles(0, 0, 'particle_failure', {
+      speed: { min: 50, max: 100 },
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 0.6, end: 0 },
+      gravityY: 150, // Falling debris
+      emitting: false
+    });
+
+    this.destroyEmitter = this.add.particles(0, 0, 'particle_destroyed', {
+      speed: { min: 200, max: 400 },
+      scale: { start: 0.8, end: 0 },
+      blendMode: 'ADD',
+      lifespan: 1000,
       emitting: false
     });
 
@@ -183,7 +204,7 @@ export class MainScene extends Phaser.Scene {
       this.statusText.setColor('#00ff00');
 
       // Success Effect: Particles & Scale
-      this.particleEmitter.explode(50, this.sword.x, this.sword.y - 100);
+      this.successEmitter.explode(50, this.sword.x, this.sword.y - 100);
 
       this.tweens.add({
         targets: this.sword,
@@ -197,12 +218,14 @@ export class MainScene extends Phaser.Scene {
       this.statusText.setColor('#ffaa00');
       this.cameras.main.shake(100, 0.01);
 
+      this.failEmitter.explode(30, this.sword.x, this.sword.y - 50);
+
     } else if (result === 'DESTROY') {
       this.statusText.setColor('#ff0000');
       this.cameras.main.shake(300, 0.05);
 
       this.sword.setVisible(false);
-      this.particleEmitter.explode(20, this.sword.x, this.sword.y); // Shatter effect substitute
+      this.destroyEmitter.explode(80, this.sword.x, this.sword.y - 50);
 
       this.time.delayedCall(1500, () => {
         this.sword.setVisible(true);
