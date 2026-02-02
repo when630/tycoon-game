@@ -23,11 +23,8 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.Arrays.asList(
-                    "http://localhost:3000",
-                    "https://tycoon-game-production.up.railway.app",
-                    "https://front-production-4837.up.railway.app"
-                ));
+                // Use allowedOriginPatterns instead of allowedOrigins to support wildcards with credentials
+                config.setAllowedOriginPatterns(java.util.Collections.singletonList("*"));
                 config.setAllowedMethods(java.util.Collections.singletonList("*"));
                 config.setAllowedHeaders(java.util.Collections.singletonList("*"));
                 config.setAllowCredentials(true);
