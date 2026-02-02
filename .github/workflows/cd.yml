@@ -1,0 +1,20 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}     # Server IP Address
+          username: ${{ secrets.SERVER_USER }} # Server Username (e.g., ubuntu)
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH Private Key content
+          port: 22
+          script: |
+            cd ~/tycoon-game
+            ./deploy.sh
