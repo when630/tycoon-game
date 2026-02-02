@@ -32,12 +32,20 @@ public class User extends BaseTimeEntity {
     @Column(name = "highest_level", nullable = false)
     private int highestLevel;
 
+    @Column(length = 20)
+    private String provider; // KAKAO, GOOGLE, etc.
+
+    @Column(name = "provider_id")
+    private String providerId;
+
     @Builder
-    public User(String nickname) {
+    public User(String nickname, String provider, String providerId) {
         this.nickname = nickname;
         this.gold = BigInteger.ZERO;
         this.reputation = 0;
         this.highestLevel = 0;
+        this.provider = provider;
+        this.providerId = providerId;
     }
 
     public void updateGold(BigInteger amount) {
