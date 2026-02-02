@@ -16,7 +16,7 @@ export class MainScene extends Phaser.Scene {
   private levelText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private enhanceButton!: Phaser.GameObjects.Rectangle;
-  private buttonText!: Phaser.GameObjects.Text;
+  private shape!: Phaser.GameObjects.Rectangle; // Generic shape reference if needed
 
   constructor() {
     super({ key: 'MainScene' });
@@ -96,7 +96,7 @@ export class MainScene extends Phaser.Scene {
       .on('pointerover', () => this.enhanceButton.setFillStyle(0x5588ff))
       .on('pointerout', () => this.enhanceButton.setFillStyle(0x3366ff));
 
-    this.buttonText = this.add.text(width / 2, height - 100, 'ENHANCE', {
+    this.add.text(width / 2, height - 100, 'ENHANCE', {
       fontSize: '28px',
       color: '#fff',
       fontStyle: 'bold'
