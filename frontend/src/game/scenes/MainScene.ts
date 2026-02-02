@@ -61,7 +61,7 @@ export class MainScene extends Phaser.Scene {
 
     // 4. Hammer (Ready to strike)
     this.hammer = this.add.image(width / 2 + 80, height / 2 - 20, 'hammer');
-    this.hammer.setScale(0.4);
+    this.hammer.setScale(0.25);
     this.hammer.setAngle(45);
     this.hammer.setVisible(false);
 

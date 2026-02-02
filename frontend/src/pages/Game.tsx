@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PhaserGame from '../components/PhaserGame';
 
 import ContractCard from '../components/ContractCard';
+import RankingModal from '../components/RankingModal';
 import { useState } from 'react';
 
 const Game: React.FC = () => {
@@ -10,6 +11,7 @@ const Game: React.FC = () => {
   const nickname = localStorage.getItem('nickname') || 'Unknown';
   const [currentLevel, setCurrentLevel] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0); // Trigger re-render of ContractCard
+  const [isRankingOpen, setIsRankingOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -27,6 +29,16 @@ const Game: React.FC = () => {
       <header className="flex justify-between items-center p-4 bg-gray-800 shadow-md z-20">
         <h2 className="m-0 text-blue-400 text-2xl font-bold">Forge Tycoon</h2>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsRankingOpen(true)}
+            className="flex items-center gap-2 px-3 py-1 rounded bg-yellow-600 hover:bg-yellow-500 text-white font-bold transition-colors"
+          >
+            <img src="/assets/trophy_icon.png" alt="Rank" className="w-5 h-5 pixelated" />
+            RANKING
+          </button>
+
+          <div className="h-6 w-px bg-gray-600 mx-2"></div>
+
           <span>PLAYER: <strong>{nickname}</strong></span>
           <button
             onClick={handleLogout}
@@ -43,6 +55,9 @@ const Game: React.FC = () => {
           currentLevel={currentLevel}
           onComplete={handleContractComplete}
         />
+
+        {/* Ranking Modal */}
+        <RankingModal isOpen={isRankingOpen} onClose={() => setIsRankingOpen(false)} />
 
         <PhaserGame onLevelChange={setCurrentLevel} />
       </main>
