@@ -83,7 +83,7 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete })
   const isAchieved = currentLevel >= contract.targetLevel;
 
   return (
-    <div className="absolute top-4 right-4 w-80 font-mono z-10">
+    <div className="absolute top-[80px] left-1/2 -translate-x-1/2 w-[95%] md:w-80 md:left-auto md:translate-x-0 md:top-20 md:right-4 font-mono z-10 transition-all duration-300">
       {/* NPC Portrait */}
       <div className="absolute -left-16 top-0 w-20 h-20 bg-gray-900 border-2 border-white rounded-full overflow-hidden shadow-lg z-20">
         <img src={npcImage} alt="NPC" className="w-full h-full object-cover pixelated" />
