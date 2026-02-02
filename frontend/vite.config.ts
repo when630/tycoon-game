@@ -46,6 +46,10 @@ export default defineConfig({
         target: 'http://backend:8080',
         changeOrigin: true
       }
-    }
+    },
+    allowedHosts: [
+      'front-production-4837.up.railway.app',
+      '.railway.app'
+    ]
   }
 })
