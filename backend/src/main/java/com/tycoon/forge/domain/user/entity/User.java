@@ -1,0 +1,65 @@
+package com.tycoon.forge.domain.user.entity;
+
+import com.tycoon.forge.domain.common.BaseTimeEntity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigInteger;
+import java.util.UUID;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "users")
+public class User extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false, length = 50)
+    private String nickname;
+
+    @Column(nullable = false)
+    private BigInteger gold;
+
+    @Column(nullable = false)
+    private int reputation;
+
+    @Column(name = "highest_level", nullable = false)
+    private int highestLevel;
+
+    @Builder
+    public User(String nickname) {
+        this.nickname = nickname;
+        this.gold = BigInteger.ZERO;
+        this.reputation = 0;
+        this.highestLevel = 0;
+    }
+
+    public void updateGold(BigInteger amount) {
+        this.gold = amount;
+    }
+    
+    public void addGold(BigInteger amount) {
+        this.gold = this.gold.add(amount);
+    }
+    
+    public void subtractGold(BigInteger amount) {
+       // TODO: Check for negative balance if needed
+       this.gold = this.gold.subtract(amount);
+    }
+
+    public void updateReputation(int reputation) {
+        this.reputation = reputation;
+    }
+    
+    public void updateHighestLevel(int level) {
+        if (level > this.highestLevel) {
+            this.highestLevel = level;
+        }
+    }
+}
