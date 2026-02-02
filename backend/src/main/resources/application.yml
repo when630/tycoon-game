@@ -1,6 +1,8 @@
 spring:
   application:
     name: Forge Tycoon
+  server:
+    port: ${PORT:8080}
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:tycoon}
     username: ${DB_USER:root}
