@@ -16,20 +16,15 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:ForgeTycoonSecretKeyForDevelopmentPurposeOnly1234567890}")
-    private String secretKeyString;
+    // Hardcoded key to ensure consistency across environments during debugging
+    private final String secretKeyString = "ForgeTycoonSecretKeyForDevelopmentPurposeOnly1234567890_Hardcoded_For_Safety";
 
     private SecretKey secretKey;
     private final long validityInMilliseconds = 86400000; // 24h
 
     @PostConstruct
     protected void init() {
-        // Ensure key length is sufficient for HS256
-        String key = secretKeyString;
-        if (key.length() < 32) {
-            key = String.format("%-32s", key).replace(' ', '0');
-        }
-        secretKey = Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8));
+        secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
     }
 
     public String createToken(UUID userId) {
