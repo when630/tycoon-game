@@ -38,3 +38,23 @@ Railway(railway.app)를 사용하여 Forge Tycoon (Frontend + Backend + DB)을 �
 
 ## 6. 완료!
 이제 Frontend 도메인 주소를 친구들에게 공유하여 게임을 즐기세요!
+
+## 7. Raw Editor 붙여넣기용 (Variables)
+
+Railway 서비스 설정의 **Variables** 탭에서 **Raw Editor**를 클릭한 후, 아래 내용을 그대로 복사 붙여넣기 하세요.
+
+### Backend 서비스용 (`/backend`)
+```env
+PORT=8080
+DB_HOST=${{ MySQL.MYSQLHOST }}
+DB_PORT=${{ MySQL.MYSQLPORT }}
+DB_NAME=${{ MySQL.MYSQLDATABASE }}
+DB_USER=${{ MySQL.MYSQLUSER }}
+DB_PASSWORD=${{ MySQL.MYSQLPASSWORD }}
+```
+
+### Frontend 서비스용 (`/frontend`)
+```env
+VITE_API_URL=https://<여기에_백엔드_도메인을_넣으세요>
+```
+(주의: `<...>` 부분을 실제 Backend 도메인으로 바꿔야 합니다. 예: `https://backend-production.up.railway.app`)
