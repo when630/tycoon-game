@@ -22,8 +22,19 @@ client.interceptors.request.use(
     return config;
   },
   (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor to handle auth errors
+client.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error: any) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       // Token expired or invalid
+      console.warn('Authentication error, logging out...', error.response.status);
       localStorage.removeItem('token');
       localStorage.removeItem('nickname');
       window.location.href = '/';
