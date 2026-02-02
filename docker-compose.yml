@@ -12,6 +12,19 @@ services:
       - mysql-db
     restart: always
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend:8080
+    depends_on:
+      - backend
+    restart: always
+
   mysql-db:
     image: mysql:8.0
     environment:
