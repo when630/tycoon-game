@@ -16,10 +16,16 @@ export class MainScene extends Phaser.Scene {
   private levelText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private enhanceButton!: Phaser.GameObjects.Rectangle;
-  private shape!: Phaser.GameObjects.Rectangle; // Generic shape reference if needed
+  // private shape!: Phaser.GameObjects.Rectangle; // Generic shape reference if needed -> Removed
+
+  private onLevelChange?: (level: number) => void;
 
   constructor() {
     super({ key: 'MainScene' });
+  }
+
+  public setLevelChangeCallback(callback: (level: number) => void) {
+    this.onLevelChange = callback;
   }
 
   preload() {
@@ -165,6 +171,10 @@ export class MainScene extends Phaser.Scene {
     this.currentLevel = newLevel;
     this.levelText.setText(`Level: +${this.currentLevel}`);
     this.statusText.setText(message);
+
+    if (this.onLevelChange) {
+      this.onLevelChange(this.currentLevel);
+    }
 
     this.updateSwordSprite();
 
