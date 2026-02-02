@@ -1,5 +1,4 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import PhaserGame from '../components/PhaserGame';
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -25,11 +24,8 @@ const Game: React.FC = () => {
           </button>
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center relative">
-        <div className="text-center opacity-50">
-          <h3 className="text-xl mb-2">Game Canvas Will Be Here</h3>
-          <p>Phaser integration pending...</p>
-        </div>
+      <main className="flex-1 flex items-center justify-center relative bg-gray-950">
+        <PhaserGame />
       </main>
     </div>
   );
