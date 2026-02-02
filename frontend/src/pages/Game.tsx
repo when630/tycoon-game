@@ -29,7 +29,10 @@ const Game: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <header className="flex justify-between items-center p-4 bg-gray-800 shadow-md z-20">
-        <h2 className="m-0 text-blue-400 text-2xl font-bold">Forge Tycoon</h2>
+        <div className="flex flex-col">
+          <h2 className="m-0 text-blue-400 text-2xl font-bold">Forge Tycoon</h2>
+          <span className="text-xs text-gray-500">v1.1.0 (Auto-Logout Fix)</span>
+        </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsRankingOpen(true)}
