@@ -1,3 +1,5 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PhaserGame from '../components/PhaserGame';
 
 const Game: React.FC = () => {
