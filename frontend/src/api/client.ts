@@ -22,6 +22,12 @@ client.interceptors.request.use(
     return config;
   },
   (error: any) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Token expired or invalid
+      localStorage.removeItem('token');
+      localStorage.removeItem('nickname');
+      window.location.href = '/';
+    }
     return Promise.reject(error);
   }
 );
