@@ -18,6 +18,7 @@ public class EnhanceService {
     private final UserRepository userRepository;
     private final Random random;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public EnhanceService(UserRepository userRepository) {
         this.userRepository = userRepository;
         this.random = new Random();
