@@ -1,20 +1,32 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Game from './pages/Game';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // Simple auth check wrapper
+  const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  };
 
   return (
-    <>
-      <div>
-        <h1>Forge Tycoon</h1>
-        <div className="card">
-          <button onClick={() => setCount((count) => count + 1)}>
-            count is {count}
-          </button>
-        </div>
-      </div>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route
+          path="/game"
+          element={
+            <ProtectedRoute>
+              <Game />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
