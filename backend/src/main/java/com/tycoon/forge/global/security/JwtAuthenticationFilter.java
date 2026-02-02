@@ -31,7 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             // Create a simple UserDetails object since we don't have roles/permissions complex logic yet
             // Password is empty string and roles list is empty
-            UserDetails userDetails = new User(userId.toString(), "", Collections.emptyList());
+            // Create UserPrincipal instead of generic User
+            UserDetails userDetails = new UserPrincipal(userId, userId.toString(), "", Collections.emptyList());
             
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);

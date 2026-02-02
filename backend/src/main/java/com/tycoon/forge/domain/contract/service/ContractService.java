@@ -20,6 +20,7 @@ public class ContractService {
 
     private final ContractRepository contractRepository;
     private final UserRepository userRepository;
+    private final com.tycoon.forge.domain.relic.service.RelicService relicService;
     private final Random random = new Random();
 
     @Transactional
@@ -43,14 +44,29 @@ public class ContractService {
         } else if (reputation < 500) {
             baseTarget = 6 + random.nextInt(4); // 6~9
         } else {
-            baseTarget = 10 + random.nextInt(3); // 10~12
+            baseTarget = 10 + random.nextInt(4); // 10~13
         }
 
-        // Calculate Reward and Penalty
-        // Reward = Base * 2^(target-3) (Just an example formula)
-        // Adjust for economy later
-        long rewardVal = 500L * (long) Math.pow(1.5, baseTarget);
-        long penaltyVal = rewardVal / 2;
+        // Calculate Reward based on Estimated Cost
+        // Cost func: Base(100) * (Lv+1)^2
+        // We sum costs from Lv0 to TargetLv
+        long estimatedCost = 0;
+        for (int i = 0; i < baseTarget; i++) {
+             // Cost to go from i to i+1
+             long stepCost = 100L * (long) Math.pow(i + 1, 2);
+             
+             // Adjust for fail rate (Expected Value)
+             // Simple multiplier to account for fails
+             double difficultyMultiplier = 1.0;
+             if (i >= 5) difficultyMultiplier = 1.5; 
+             if (i >= 10) difficultyMultiplier = 3.0;
+             
+             estimatedCost += (long) (stepCost * difficultyMultiplier);
+        }
+
+        // Reward = Estimated Cost * 1.5 (Profit Margin)
+        long rewardVal = (long) (estimatedCost * 1.5);
+        long penaltyVal = rewardVal / 3; // Penalty is 1/3 of reward
 
         Contract contract = Contract.builder()
                 .user(user)
@@ -80,7 +96,13 @@ public class ContractService {
 
         if (currentItemLevel >= contract.getTargetLevel()) {
             contract.complete();
-            user.addGold(contract.getRewardGold());
+            
+            // Relic Bonus: MERCHANT_CERTIFICATE
+            double bonusPercent = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.MERCHANT_CERTIFICATE);
+            BigInteger reward = contract.getRewardGold();
+            BigInteger bonus = new java.math.BigDecimal(reward).multiply(java.math.BigDecimal.valueOf(bonusPercent)).toBigInteger();
+            
+            user.addGold(reward.add(bonus));
             user.updateReputation(contract.getTargetLevel() * 10);
         } else {
             throw new IllegalArgumentException("Target level not reached");

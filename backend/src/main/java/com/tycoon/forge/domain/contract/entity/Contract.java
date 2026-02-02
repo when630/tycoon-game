@@ -1,7 +1,7 @@
 package com.tycoon.forge.domain.contract.entity;
 
 import com.tycoon.forge.domain.user.entity.User;
-import com.tycoon.forge.global.entity.BaseTimeEntity;
+import com.tycoon.forge.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

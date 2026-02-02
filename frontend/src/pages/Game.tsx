@@ -4,6 +4,7 @@ import PhaserGame from '../components/PhaserGame';
 
 import ContractCard from '../components/ContractCard';
 import RankingModal from '../components/RankingModal';
+import RelicModal from '../components/RelicModal';
 import { useState } from 'react';
 
 const Game: React.FC = () => {
@@ -12,6 +13,7 @@ const Game: React.FC = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0); // Trigger re-render of ContractCard
   const [isRankingOpen, setIsRankingOpen] = useState(false);
+  const [isRelicOpen, setIsRelicOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -37,6 +39,14 @@ const Game: React.FC = () => {
             RANKING
           </button>
 
+          <button
+            onClick={() => setIsRelicOpen(true)}
+            className="flex items-center gap-2 px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold transition-colors ml-2"
+          >
+            <span className="text-xl">💎</span>
+            RELICS
+          </button>
+
           <div className="h-6 w-px bg-gray-600 mx-2"></div>
 
           <span>PLAYER: <strong>{nickname}</strong></span>
@@ -58,6 +68,9 @@ const Game: React.FC = () => {
 
         {/* Ranking Modal */}
         <RankingModal isOpen={isRankingOpen} onClose={() => setIsRankingOpen(false)} />
+
+        {/* Relic Modal */}
+        <RelicModal isOpen={isRelicOpen} onClose={() => setIsRelicOpen(false)} />
 
         <PhaserGame onLevelChange={setCurrentLevel} />
       </main>

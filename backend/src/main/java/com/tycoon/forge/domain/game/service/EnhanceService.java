@@ -16,18 +16,14 @@ import java.util.UUID;
 public class EnhanceService {
 
     private final UserRepository userRepository;
+    private final com.tycoon.forge.domain.relic.service.RelicService relicService;
     private final Random random;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public EnhanceService(UserRepository userRepository) {
+    public EnhanceService(UserRepository userRepository, com.tycoon.forge.domain.relic.service.RelicService relicService) {
         this.userRepository = userRepository;
+        this.relicService = relicService;
         this.random = new Random();
-    }
-
-    // For Testing
-    public EnhanceService(UserRepository userRepository, Random random) {
-        this.userRepository = userRepository;
-        this.random = random;
     }
 
     @Transactional
@@ -37,34 +33,55 @@ public class EnhanceService {
 
         int currentLevel = request.getCurrentLevel();
         BigInteger itemBaseValue = request.getItemBaseValue();
+
+        // 1. Calculate Enhance Cost: Base * (Level + 1)^2
+        long costVal = itemBaseValue.longValue() * (long) Math.pow(currentLevel + 1, 2);
         
-        // Probability Logic
+        // Relic Effect: ANCIENT_ANVIL (Cost Reduction)
+        double costReduction = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.ANCIENT_ANVIL);
+        long reducedCostVal = (long) (costVal * (1.0 - costReduction));
+        BigInteger enhanceCost = BigInteger.valueOf(reducedCostVal);
+
+        if (user.getGold().compareTo(enhanceCost) < 0) {
+            throw new IllegalStateException("Not enough gold to enhance. Required: " + enhanceCost);
+        }
+
+        // Deduct Cost First
+        user.subtractGold(enhanceCost);
+
+        // 2. Probability Logic
         double successRate;
         double destroyRate;
-        double failRate;
-        double payoutMultiplier;
         
-        if (currentLevel <= 5) { // +1 ~ +5 (Level 0 -> 1 ... 4 -> 5 is treated here?)
-            // Assuming currentLevel starts at 0 for +1 attempt? Or 1 for +2?
-            // GDD: +1 ~ +5
-            successRate = 0.90; // Avg 100~80%
+        if (currentLevel < 5) { // 0, 1, 2, 3, 4 -> +1 ~ +5
+            // Safe Zone
+            successRate = 0.95 - (currentLevel * 0.05); // 95%, 90%, 85%, 80%, 75%
             destroyRate = 0.0;
-            payoutMultiplier = 0.5;
-        } else if (currentLevel <= 10) { // +6 ~ +10
-            successRate = 0.55; // Avg 70~40%
-            destroyRate = 0.05;
-            payoutMultiplier = 2.0;
-        } else if (currentLevel <= 15) { // +11 ~ +15
-            successRate = 0.22; // Avg 30~15%
-            destroyRate = 0.15;
-            payoutMultiplier = 8.0;
-        } else { // +16 ~ +20
-            successRate = 0.05; // Avg 10~1%
-            destroyRate = 0.30;
-            payoutMultiplier = 25.0;
+        } else if (currentLevel < 10) { // 5, 6, 7, 8, 9 -> +6 ~ +10
+            // Risk Zone (Fail causes drop)
+            successRate = 0.70 - ((currentLevel - 5) * 0.05); // 70%, 65%, 60%, 55%, 50%
+            destroyRate = 0.0; 
+        } else if (currentLevel < 15) { // 10 ~ 14 -> +11 ~ +15
+            // Danger Zone (Destroy possible)
+            successRate = 0.40 - ((currentLevel - 10) * 0.05); // 40% ... 20%
+            destroyRate = 0.05 + ((currentLevel - 10) * 0.02); // 5% ... 13%
+        } else { // 15+ -> +16 ~
+            // Hell Zone
+            successRate = 0.10;
+            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); // Max out at some point
         }
         
-        // Calculate Rates
+        // Relic Effect: GOLDEN_HAMMER (Success Rate +)
+        double successBonus = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.GOLDEN_HAMMER);
+        successRate += successBonus;
+        
+        // Relic Effect: LUCKY_CLOVER (Destroy Rate -)
+        if (destroyRate > 0) {
+            double destroyReduction = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.LUCKY_CLOVER);
+            destroyRate = Math.max(0, destroyRate - destroyReduction);
+        }
+        
+        // 3. Roll
         double roll = random.nextDouble();
         EnhanceDto.Result result;
         
@@ -76,9 +93,9 @@ public class EnhanceService {
             result = EnhanceDto.Result.FAIL;
         }
 
-        // Apply Results
+        // 4. Apply Results
         int newLevel = currentLevel;
-        BigInteger goldChange = BigInteger.ZERO;
+        BigInteger goldChange = enhanceCost.negate(); // Start with cost deduction
         int reputationChange = 0;
         String message = "";
         
@@ -87,26 +104,26 @@ public class EnhanceService {
                 newLevel = currentLevel + 1;
                 user.updateHighestLevel(newLevel);
                 
-                // Reward Calculation: Base * Multiplier
-                goldChange = new BigDecimal(itemBaseValue).multiply(BigDecimal.valueOf(payoutMultiplier)).toBigInteger();
-                user.addGold(goldChange);
+                // No immediate gold reward for enhancing, only cost. 
+                // Money is made via Contracts.
                 
-                reputationChange = 10 + (newLevel * 2); // Simple reputation gain formula
+                reputationChange = 5 + newLevel; 
                 user.updateReputation(reputationChange);
                 
-                message = "강화 성공! +" + newLevel;
+                message = "강화 성공! (비용: " + enhanceCost + " G)";
                 break;
                 
             case FAIL:
-                if (currentLevel > 10) {
+                if (currentLevel >= 10) {
                      newLevel = Math.max(0, currentLevel - 1);
-                     // Repair cost? For now usually just loss of attempt or downgrade
-                     message = "강화 실패... 등급 하락";
+                     message = "강화 실패... 등급 하락 (비용: " + enhanceCost + " G)";
+                } else if (currentLevel >= 5) {
+                     newLevel = Math.max(0, currentLevel - 1); // Drop in mid tier too? Or just fail? Let's make it drop for tension
+                     message = "강화 실패... 등급 하락 (비용: " + enhanceCost + " G)";
                 } else {
-                     // Low level fail might just be no change or -1 depending on strictness
-                     // GDD says "Fail: -1 drop"
-                     newLevel = Math.max(0, currentLevel - 1);
-                     message = "강화 실패...";
+                     // Safe zone fail -> No drop
+                     newLevel = currentLevel; 
+                     message = "강화 실패... (비용: " + enhanceCost + " G)";
                 }
                 reputationChange = -2;
                 user.decreaseReputation(2);
@@ -115,19 +132,15 @@ public class EnhanceService {
             case DESTROY:
                 newLevel = 0; // Item gone
                 
-                // Compensation: Base * Level Coefficient (Simplified as 5 * level for now or just high penalty)
-                // GDD: [Item Base * Level Coefficient]
-                // Let's use 1.5 * Level as coefficient example
-                double penaltyCoef = 1.5 * currentLevel;
-                BigInteger penalty = new BigDecimal(itemBaseValue).multiply(BigDecimal.valueOf(penaltyCoef)).toBigInteger();
-                
-                user.subtractGold(penalty);
-                goldChange = penalty.negate();
+                // No penalty gold deduction implies just losing the item and the cost. 
+                // The explicit penalty in previous code was harsh. Let's just lose the item context.
+                // But wait, "User" entity might not track "Item". 
+                // Conceptually "Item Destroyed" means starting over from +0.
                 
                 reputationChange = -50;
                 user.decreaseReputation(50);
                 
-                message = "아이템 파괴!! 배상금 발생: " + penalty;
+                message = "아이템 파괴!! 처음부터 다시 시작...";
                 break;
         }
         
@@ -136,7 +149,7 @@ public class EnhanceService {
         return EnhanceDto.Response.builder()
                 .result(result)
                 .newLevel(newLevel)
-                .goldChange(goldChange)
+                .goldChange(goldChange) // This shows the net change (just cost usually)
                 .reputationChange(reputationChange)
                 .message(message)
                 .build();

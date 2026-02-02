@@ -20,7 +20,7 @@ public class JwtTokenProvider {
     private String secretKeyString;
 
     private SecretKey secretKey;
-    private final long validityInMilliseconds = 3600000; // 1h
+    private final long validityInMilliseconds = 86400000; // 24h
 
     @PostConstruct
     protected void init() {
