@@ -1,58 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 import client from '../api/client';
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #282c34;
-  color: white;
-`;
-
-const Title = styled.h1`
-  font-size: 3rem;
-  margin-bottom: 2rem;
-  color: #61dafb;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 300px;
-`;
-
-const Input = styled.input`
-  padding: 10px;
-  border-radius: 5px;
-  border: none;
-  font-size: 1rem;
-`;
-
-const Button = styled.button`
-  padding: 10px;
-  border-radius: 5px;
-  border: none;
-  background-color: #61dafb;
-  color: #282c34;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #21a1f1;
-  }
-`;
-
-const ErrorMessage = styled.p`
-  color: #ff6b6b;
-  font-size: 0.9rem;
-`;
 
 const Login: React.FC = () => {
   const [nickname, setNickname] = useState('');
@@ -81,19 +29,25 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Container>
-      <Title>Forge Tycoon</Title>
-      <Form onSubmit={handleSubmit}>
-        <Input
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-800 text-white">
+      <h1 className="text-5xl mb-8 text-blue-400 font-bold">Forge Tycoon</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-72">
+        <input
           type="text"
           placeholder="닉네임 입력"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
+          className="p-3 rounded border-none text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        <Button type="submit">게임 시작</Button>
-      </Form>
-    </Container>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <button
+          type="submit"
+          className="p-3 rounded border-none bg-blue-400 text-gray-900 text-lg font-bold cursor-pointer hover:bg-blue-500 transition-colors"
+        >
+          게임 시작
+        </button>
+      </form>
+    </div>
   );
 };
 
