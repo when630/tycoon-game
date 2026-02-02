@@ -49,17 +49,18 @@ export class MainScene extends Phaser.Scene {
     this.background.setDisplaySize(width, height);
     this.background.setAlpha(0.6); // Darken slightly
 
-    // 2. Anvil
-    this.anvil = this.add.image(width / 2, height / 2 + 150, 'anvil');
-    this.anvil.setScale(0.5); // Adjust scale
+    // 2. Anvil (Center lower)
+    this.anvil = this.add.image(width / 2, height / 2 + 100, 'anvil');
+    this.anvil.setScale(0.5);
 
     // 3. Sword (On top of anvil)
-    this.sword = this.add.sprite(width / 2, height / 2 - 50, 'sword', 0);
-    this.sword.setScale(0.3);
-    this.sword.setOrigin(0.5, 1); // Bottom center pivot for shake effects
+    // Anvil y is at +100. Let's put the sword's bottom tip exactly hitting the anvil surface.
+    this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword', 0);
+    this.sword.setScale(0.35);
+    this.sword.setOrigin(0.5, 1); // Pivot at bottom center
 
-    // 4. Hammer (Hidden initially or resting)
-    this.hammer = this.add.image(width / 2 + 100, height / 2, 'hammer');
+    // 4. Hammer (Ready to strike)
+    this.hammer = this.add.image(width / 2 + 80, height / 2 - 20, 'hammer');
     this.hammer.setScale(0.4);
     this.hammer.setAngle(45);
     this.hammer.setVisible(false);
@@ -81,14 +82,14 @@ export class MainScene extends Phaser.Scene {
       strokeThickness: 6
     }).setOrigin(0.5);
 
-    this.levelText = this.add.text(width / 2, height / 2 + 200, `Level: +${this.currentLevel}`, {
+    this.levelText = this.add.text(width / 2, height / 2 - 150, `Level: +${this.currentLevel}`, {
       fontSize: '32px',
       color: '#00ff00',
       stroke: '#000',
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    this.statusText = this.add.text(width / 2, height / 2 + 250, 'Ready to Forge', {
+    this.statusText = this.add.text(width / 2, height / 2 - 100, 'Ready to Forge', {
       fontSize: '24px',
       color: '#ffff00',
       stroke: '#000',
@@ -143,7 +144,7 @@ export class MainScene extends Phaser.Scene {
 
   private playHammerAnimation() {
     this.hammer.setVisible(true);
-    this.hammer.setPosition(this.width / 2 + 100, this.height / 2 - 50);
+    this.hammer.setPosition(this.width / 2 + 80, this.height / 2 - 20);
     this.hammer.setAngle(45);
 
     this.tweens.add({
@@ -182,7 +183,7 @@ export class MainScene extends Phaser.Scene {
       this.statusText.setColor('#00ff00');
 
       // Success Effect: Particles & Scale
-      this.particleEmitter.explode(50, this.sword.x, this.sword.y - 50);
+      this.particleEmitter.explode(50, this.sword.x, this.sword.y - 100);
 
       this.tweens.add({
         targets: this.sword,
