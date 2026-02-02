@@ -61,8 +61,12 @@ public class User extends BaseTimeEntity {
        this.gold = this.gold.subtract(amount);
     }
 
-    public void updateReputation(int reputation) {
-        this.reputation = reputation;
+    public void updateReputation(int amount) {
+        this.reputation += amount;
+    }
+
+    public void decreaseReputation(int amount) {
+        this.reputation -= amount;
     }
     
     public void updateHighestLevel(int level) {
