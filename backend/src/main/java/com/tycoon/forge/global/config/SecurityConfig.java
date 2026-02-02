@@ -23,12 +23,14 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                // Allow all origins for production (since frontend domain changes)
-                // In a strict environment, list specific domains.
-                config.setAllowedOrigins(java.util.Collections.singletonList("*"));
+                config.setAllowedOrigins(java.util.Arrays.asList(
+                    "http://localhost:3000",
+                    "https://tycoon-game-production.up.railway.app",
+                    "https://front-production-4837.up.railway.app"
+                ));
                 config.setAllowedMethods(java.util.Collections.singletonList("*"));
                 config.setAllowedHeaders(java.util.Collections.singletonList("*"));
-                config.setAllowCredentials(false); // Must be false when allowedOrigins is "*"
+                config.setAllowCredentials(true);
                 return config;
             }))
             .csrf(AbstractHttpConfigurer::disable)
