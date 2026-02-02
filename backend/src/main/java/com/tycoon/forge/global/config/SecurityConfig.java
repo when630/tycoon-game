@@ -23,10 +23,12 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.Collections.singletonList("http://localhost:3000"));
+                // Allow all origins for production (since frontend domain changes)
+                // In a strict environment, list specific domains.
+                config.setAllowedOrigins(java.util.Collections.singletonList("*"));
                 config.setAllowedMethods(java.util.Collections.singletonList("*"));
                 config.setAllowedHeaders(java.util.Collections.singletonList("*"));
-                config.setAllowCredentials(true);
+                config.setAllowCredentials(false); // Must be false when allowedOrigins is "*"
                 return config;
             }))
             .csrf(AbstractHttpConfigurer::disable)
