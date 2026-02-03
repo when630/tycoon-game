@@ -8,6 +8,7 @@ import SellModal from '../components/SellModal';
 import RankingModal from '../components/RankingModal';
 import RelicModal from '../components/RelicModal';
 import InventoryModal from '../components/InventoryModal';
+import ProbabilityModal from '../components/ProbabilityModal';
 import client from '../api/client';
 import { Menu, LogOut, Package, Trophy, Gem, ScrollText } from 'lucide-react';
 
@@ -23,6 +24,7 @@ const Game: React.FC = () => {
   const [isRankingOpen, setIsRankingOpen] = useState(false);
   const [isRelicOpen, setIsRelicOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isProbabilityOpen, setIsProbabilityOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [refreshContractsTrigger, setRefreshContractsTrigger] = useState(0);
 
@@ -92,6 +94,7 @@ const Game: React.FC = () => {
         reputation={reputation}
         statusMessage={statusMessage}
         statusType={statusType}
+        onOpenProbability={() => openModal(setIsProbabilityOpen)}
       />
 
       {/* Phaser Game Layer */}
@@ -157,6 +160,11 @@ const Game: React.FC = () => {
       <RankingModal isOpen={isRankingOpen} onClose={() => setIsRankingOpen(false)} />
       <RelicModal isOpen={isRelicOpen} onClose={() => setIsRelicOpen(false)} />
       <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} />
+      <ProbabilityModal
+        isOpen={isProbabilityOpen}
+        onClose={() => setIsProbabilityOpen(false)}
+        currentLevel={currentLevel}
+      />
 
       <ContractOfficeModal
         isOpen={isContractOfficeOpen}

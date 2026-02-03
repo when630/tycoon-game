@@ -32,4 +32,13 @@ public class EnhanceDto {
     public enum Result {
         SUCCESS, FAIL, DESTROY
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ProbabilityResponse {
+        private double successRate;
+        private double failRate;
+        private double destroyRate;
+    }
 }

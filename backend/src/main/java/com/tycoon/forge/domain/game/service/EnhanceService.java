@@ -54,21 +54,25 @@ public class EnhanceService {
         double destroyRate;
         
         if (currentLevel < 5) { // 0, 1, 2, 3, 4 -> +1 ~ +5
-            // Safe Zone
-            successRate = 0.95 - (currentLevel * 0.05); // 95%, 90%, 85%, 80%, 75%
+            // Safe Zone: 99% -> 95% (Decay 1% per level)
+            successRate = 0.99 - (currentLevel * 0.01); 
             destroyRate = 0.0;
         } else if (currentLevel < 10) { // 5, 6, 7, 8, 9 -> +6 ~ +10
-            // Risk Zone (Fail causes drop)
-            successRate = 0.70 - ((currentLevel - 5) * 0.05); // 70%, 65%, 60%, 55%, 50%
+            // Mid Zone : 75% -> 55% (Decay 5% per level)
+            // Lv 5: 0.75 - (0 * 0.05) = 0.75
+            // Lv 9: 0.75 - (4 * 0.05) = 0.55
+            successRate = 0.75 - ((currentLevel - 5) * 0.05); 
             destroyRate = 0.0; 
         } else if (currentLevel < 15) { // 10 ~ 14 -> +11 ~ +15
-            // Danger Zone (Destroy possible)
-            successRate = 0.40 - ((currentLevel - 10) * 0.05); // 40% ... 20%
-            destroyRate = 0.05 + ((currentLevel - 10) * 0.02); // 5% ... 13%
+            // High Risk Zone: 45% -> 25% (Decay 5% per level)
+            // Lv 10: 0.45 - (0 * 0.05) = 0.45
+            // Lv 14: 0.45 - (4 * 0.05) = 0.25
+            successRate = 0.45 - ((currentLevel - 10) * 0.05); 
+            destroyRate = 0.01; // Fixed 1% destroy
         } else { // 15+ -> +16 ~
-            // Hell Zone
+            // Hell Zone (Existing Logic)
             successRate = 0.10;
-            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); // Max out at some point
+            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); 
         }
         
         // Relic Effect: GOLDEN_HAMMER (Success Rate +)
@@ -118,10 +122,11 @@ public class EnhanceService {
                      newLevel = Math.max(0, currentLevel - 1);
                      message = "강화 실패... 등급 하락";
                 } else if (currentLevel >= 5) {
-                     newLevel = Math.max(0, currentLevel - 1); // Drop in mid tier too? Or just fail? Let's make it drop for tension
-                     message = "강화 실패... 등급 하락";
+                     // Requested: 5~9 Maintain on fail
+                     newLevel = currentLevel;
+                     message = "강화 실패... (등급 유지)";
                 } else {
-                     // Safe zone fail -> No drop
+                     // Safe zone fail -> No drop (technically impossible with 99% logic usually, but keep safe)
                      newLevel = currentLevel; 
                      message = "강화 실패...";
                 }
@@ -131,12 +136,6 @@ public class EnhanceService {
                 
             case DESTROY:
                 newLevel = 0; // Item gone
-                
-                // No penalty gold deduction implies just losing the item and the cost. 
-                // The explicit penalty in previous code was harsh. Let's just lose the item context.
-                // But wait, "User" entity might not track "Item". 
-                // Conceptually "Item Destroyed" means starting over from +0.
-                
                 reputationChange = -50;
                 user.decreaseReputation(50);
                 
@@ -153,5 +152,38 @@ public class EnhanceService {
                 .reputationChange(reputationChange)
                 .message(message)
                 .build();
+    }
+
+    public EnhanceDto.ProbabilityResponse getProbabilities(int currentLevel) {
+        double successRate;
+        double destroyRate;
+
+        if (currentLevel < 5) { 
+            successRate = 0.99 - (currentLevel * 0.01); 
+            destroyRate = 0.0;
+        } else if (currentLevel < 10) { 
+            successRate = 0.75 - ((currentLevel - 5) * 0.05); 
+            destroyRate = 0.0; 
+        } else if (currentLevel < 15) { 
+            successRate = 0.45 - ((currentLevel - 10) * 0.05); 
+            destroyRate = 0.01; 
+        } else { 
+            successRate = 0.10;
+            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); 
+        }
+        
+        // Base fail rate assuming no relics for display (Frontend might not know relics easily yet)
+        // Or we could pass userId to calculate relics. For now let's show BASE probabilities.
+        // Ideally should include relics but let's stick to base for now as requested "Probability display".
+        // Actually, user would want to see their ACTUAL probability. 
+        // Let's modify signature to accept UUID if possible, but controller might just pass level.
+        // Let's stick to base logic for the HUD '?' button for now to keep it simple, 
+        // OR changing it to contextual. 
+        // Let's return the BASE rates. Relics are hidden bonuses.
+        
+        double failRate = 1.0 - successRate - destroyRate;
+        if (failRate < 0) failRate = 0;
+
+        return new EnhanceDto.ProbabilityResponse(successRate, failRate, destroyRate);
     }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Coins, Sword, Trophy } from 'lucide-react';
+import { Coins, Sword, Trophy, HelpCircle } from 'lucide-react';
 
 interface GameHUDProps {
   gold: number;
@@ -7,9 +7,10 @@ interface GameHUDProps {
   reputation: number;
   statusMessage: string;
   statusType: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY';
+  onOpenProbability: () => void;
 }
 
-const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statusMessage, statusType }) => {
+const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statusMessage, statusType, onOpenProbability }) => {
   const [animateGold, setAnimateGold] = useState(false);
 
   useEffect(() => {
@@ -17,7 +18,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statu
     const timer = setTimeout(() => setAnimateGold(false), 500);
     return () => clearTimeout(timer);
   }, [gold]);
-
+  // ... (rest of the code similar to before but careful with matching)
   const getStatusColor = () => {
     switch (statusType) {
       case 'SUCCESS': return 'text-green-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
@@ -46,7 +47,16 @@ const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statu
         {/* Level & Reputation Stack */}
         <div className="flex items-start gap-4 ml-1">
           {/* Level Badge */}
-          <div className="bg-gray-900/80 border-2 border-blue-500 rounded-lg p-3 shadow-lg backdrop-blur-sm animate-fade-in-down min-w-[120px]">
+          <div className="bg-gray-900/80 border-2 border-blue-500 rounded-lg p-3 shadow-lg backdrop-blur-sm animate-fade-in-down min-w-[120px] relative">
+            {/* Probability Help Button */}
+            <button
+              onClick={onOpenProbability}
+              className="absolute -top-3 -right-3 bg-gray-700 text-gray-300 hover:text-white rounded-full p-1 border border-gray-500 shadow-md transition-transform hover:scale-110 z-20 pointer-events-auto"
+              title="강화 확률 보기"
+            >
+              <HelpCircle size={16} />
+            </button>
+
             <span className="text-gray-400 text-xs font-bold uppercase tracking-widest block mb-1 text-center">Level</span>
             <div className="flex items-center justify-center gap-2">
               <Sword size={32} className="text-blue-400" />
