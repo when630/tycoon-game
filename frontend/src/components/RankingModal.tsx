@@ -50,7 +50,7 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }: RankingM
           X
         </button>
 
-        <h2 className="text-2xl font-bold text-center text-yellow-500 mb-6">HALL OF FAME</h2>
+        <h2 className="text-2xl font-bold text-center text-yellow-500 mb-6">명예의 전당</h2>
 
         {/* Tabs */}
         <div className="flex mb-4 border-b border-gray-600">
@@ -61,7 +61,7 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }: RankingM
               : 'text-gray-400 hover:text-gray-200'
               }`}
           >
-            Top Smith
+            최고의 대장장이
           </button>
           <button
             onClick={() => setActiveTab('RICH')}
@@ -70,22 +70,22 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }: RankingM
               : 'text-gray-400 hover:text-gray-200'
               }`}
           >
-            Rich Smith
+            최고의 부자
           </button>
         </div>
 
         {/* Ranking List */}
         <div className="max-h-80 overflow-y-auto">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-gray-500">로딩 중...</div>
           ) : (
             <table className="w-full text-sm">
               <thead className="text-gray-400 border-b border-gray-700">
                 <tr>
-                  <th className="py-2 text-left w-12">#</th>
-                  <th className="py-2 text-left">Nickname</th>
+                  <th className="py-2 text-left w-12">순위</th>
+                  <th className="py-2 text-left">닉네임</th>
                   <th className="py-2 text-right">
-                    {activeTab === 'LEVEL' ? 'Level' : 'Gold'}
+                    {activeTab === 'LEVEL' ? '레벨' : '골드'}
                   </th>
                 </tr>
               </thead>
@@ -105,7 +105,7 @@ const RankingModal: React.FC<RankingModalProps> = ({ isOpen, onClose }: RankingM
             </table>
           )}
           {!loading && rankings.length === 0 && (
-            <div className="text-center py-8 text-gray-500">No records found.</div>
+            <div className="text-center py-8 text-gray-500">랭킹 정보가 없습니다.</div>
           )}
         </div>
       </div>

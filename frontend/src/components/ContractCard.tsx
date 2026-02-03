@@ -84,74 +84,98 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete }:
   const isAchieved = currentLevel >= contract.targetLevel;
 
   return (
-    <div className={`absolute top-[80px] left-1/2 -translate-x-1/2 font-mono z-10 transition-all duration-300 ${isCollapsed ? 'w-auto' : 'w-[95%] md:w-80'} md:left-auto md:translate-x-0 md:top-20 md:right-4`}>
-      {/* NPC Portrait (Click triggers collapse toggle) */}
+    <div className={`absolute top-24 md:top-24 right-4 z-10 flex items-start flex-row-reverse transition-all duration-300 ${isCollapsed ? 'w-auto' : 'w-[90%] md:w-[500px]'}`}>
+
+      {/* NPC Portrait (Right Side) */}
       <div
+        className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform z-20"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -left-16 top-0 w-20 h-20 bg-gray-900 border-2 border-white rounded-full overflow-hidden shadow-lg z-20 cursor-pointer hover:scale-105 transition-transform"
         title={isCollapsed ? "의뢰 펼치기" : "의뢰 접기"}
       >
-        <img src={npcImage} alt="NPC" className="w-full h-full object-cover pixelated" />
-        {/* Toggle Indicator */}
-        <div className="absolute bottom-0 w-full bg-black bg-opacity-70 text-white text-[10px] text-center">
-          {isCollapsed ? '▼' : '▲'}
+        <div className="w-full h-full rounded-full border-4 border-[#8b4513] overflow-hidden bg-gray-900 shadow-lg">
+          <img src={npcImage} alt="NPC" className="w-full h-full object-cover pixelated" />
+        </div>
+
+        {/* Level Indicator Badge on Portrait */}
+        <div className="absolute -bottom-2 -left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full border border-white shadow">
+          Lv.{contract.targetLevel}
         </div>
       </div>
 
-      {/* Dialog Box - Hidden when collapsed, or simplified */}
+      {/* Speech Bubble (Left Side) */}
       {!isCollapsed && (
-        <div className="relative bg-[#e8d5b5] border-4 border-[#8b4513] p-4 text-gray-900 rounded shadow-xl ml-4 animation-fade-in">
-          <h3 className="font-bold text-lg mb-1 border-b border-[#8b4513] pb-1 flex justify-between">
-            <span>{npcImage.includes('knight') ? '왕실 기사' : '떠돌이 상인'}</span>
-            <button onClick={() => setIsCollapsed(true)} className="text-gray-600 hover:text-black">_</button>
-          </h3>
-          <p className="text-sm mb-3 font-semibold">
-            "자네, 이 검을 <span className="text-red-600 text-lg">+{contract.targetLevel}강</span>까지 만들어줄 수 있겠나?"
-          </p>
+        <div className="relative mr-4 flex-1">
+          {/* Bubble Tail */}
+          <div className="absolute top-8 -right-3 w-0 h-0 border-t-[10px] border-t-transparent border-l-[15px] border-l-[#e8d5b5] border-b-[10px] border-b-transparent drop-shadow-sm filter z-10"></div>
 
-          <div className="text-xs bg-[#d4c0a1] p-2 rounded mb-3">
-            <div className="flex justify-between">
-              <span>보상:</span> <span className="text-green-700 font-bold">{contract.rewardGold} G</span>
-            </div>
-            <div className="flex justify-between text-gray-500">
-              <span>배상금:</span> <span>{contract.penaltyGold} G</span>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            {isAchieved ? (
+          <div className="bg-[#e8d5b5] border-4 border-[#8b4513] rounded-lg p-4 shadow-xl text-gray-900 animate-fade-in relative">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-[#c2a67e] pb-2 mb-2">
+              <span className="font-bold text-[#5c3a21]">
+                {npcImage.includes('knight') ? '왕실 기사' : '떠돌이 상인'}
+              </span>
               <button
-                onClick={handleComplete}
+                onClick={() => setIsCollapsed(true)}
+                className="text-[#8b4513] hover:text-red-600 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Dialogue */}
+            <p className="text-sm mb-4 leading-relaxed font-serif">
+              "이봐, 자네 실력을 좀 보여주게. <br />
+              <span className="text-red-700 font-bold bg-yellow-200/50 px-1 rounded">+{contract.targetLevel}강 검</span>이 급히 필요하다네!"
+            </p>
+
+            {/* Rewards */}
+            <div className="bg-[#d4c0a1]/50 p-2 rounded border border-[#c2a67e] mb-3 text-sm">
+              <div className="flex justify-between mb-1">
+                <span className="text-[#5c3a21]">성공 보수:</span>
+                <span className="text-green-700 font-bold">{contract.rewardGold.toLocaleString()} G</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">위약금:</span>
+                <span className="text-gray-600">-{contract.penaltyGold.toLocaleString()} G</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              {isAchieved ? (
+                <button
+                  onClick={handleComplete}
+                  disabled={loading}
+                  className="flex-1 bg-green-700 hover:bg-green-600 text-yellow-100 font-bold py-2 rounded shadow-md border-b-4 border-green-900 active:border-b-0 active:translate-y-1 transition-all animate-pulse"
+                >
+                  납품하기
+                </button>
+              ) : (
+                <div className="flex-1 bg-gray-500 text-white font-bold py-2 rounded text-center text-xs flex items-center justify-center cursor-not-allowed opacity-70">
+                  진행 중 ({currentLevel}/{contract.targetLevel})
+                </div>
+              )}
+
+              <button
+                onClick={handleAcceptNew}
                 disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded shadow animate-pulse"
+                className="px-3 bg-red-800 hover:bg-red-700 text-white text-xs rounded shadow border-b-2 border-red-950 active:border-b-0 active:translate-y-px transition-all"
+                title="새 의뢰 받기"
               >
-                납품하기
+                포기
               </button>
-            ) : (
-              <button
-                disabled
-                className="flex-1 bg-gray-400 text-white font-bold py-2 rounded cursor-not-allowed"
-              >
-                강화 부족 ({currentLevel}/{contract.targetLevel})
-              </button>
-            )}
-            <button
-              onClick={handleAcceptNew}
-              className="px-2 bg-red-800 hover:bg-red-700 text-white text-xs rounded"
-              title="새 의뢰 받기 (위약금 발생)"
-            >
-              포기
-            </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Minimized View (Optional: Just showing target level when collapsed) */}
+      {/* Minimized Bubble (Tooltip style when collapsed) */}
       {isCollapsed && (
-        <div className="absolute left-6 top-4 bg-gray-900 text-white px-2 py-1 rounded border border-yellow-500 text-xs shadow-md whitespace-nowrap ml-4">
+        <div className="mr-3 mt-4 bg-gray-900/80 text-white text-xs px-3 py-1 rounded-full border border-yellow-500 backdrop-blur-sm animate-bounce-slow">
           목표: +{contract.targetLevel}강
         </div>
       )}
+
     </div>
   );
 };

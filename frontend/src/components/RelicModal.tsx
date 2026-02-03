@@ -52,7 +52,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
       <div className="bg-gray-900 border-4 border-purple-600 rounded-lg p-6 w-[500px] text-white shadow-2xl relative">
         <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-white">X</button>
 
-        <h2 className="text-2xl font-bold text-center text-purple-400 mb-4">Mystic Relic Shop</h2>
+        <h2 className="text-2xl font-bold text-center text-purple-400 mb-4">신비한 유물 상점</h2>
 
         {/* Gacha Section */}
         <div className="flex flex-col items-center mb-6 border-b border-gray-700 pb-6">
@@ -68,7 +68,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
             disabled={loading}
             className="bg-purple-700 hover:bg-purple-600 px-6 py-2 rounded font-bold border-2 border-purple-400 shadow-lg transition-transform active:scale-95"
           >
-            {loading ? 'Opening...' : 'Summon Relic (5,000 G)'}
+            {loading ? '소환 중...' : '유물 소환 (5,000 G)'}
           </button>
         </div>
 

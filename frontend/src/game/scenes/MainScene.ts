@@ -24,6 +24,7 @@ export class MainScene extends Phaser.Scene {
   private sellText!: Phaser.GameObjects.Text;
 
   private onLevelChange?: (level: number) => void;
+  private onSellRequest?: () => void;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -31,6 +32,10 @@ export class MainScene extends Phaser.Scene {
 
   public setLevelChangeCallback(callback: (level: number) => void) {
     this.onLevelChange = callback;
+  }
+
+  public setSellRequestCallback(callback: () => void) {
+    this.onSellRequest = callback;
   }
 
   preload() {
@@ -105,21 +110,21 @@ export class MainScene extends Phaser.Scene {
       strokeThickness: 6
     }).setOrigin(0.5);
 
-    this.levelText = this.add.text(width / 2, height / 2 - 150, `Level: +${this.currentLevel}`, {
+    this.levelText = this.add.text(width / 2, height / 2 - 150, `레벨: +${this.currentLevel}`, {
       fontSize: '32px',
       color: '#00ff00',
       stroke: '#000',
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    this.statusText = this.add.text(width / 2, height / 2 - 100, 'Ready to Forge', {
+    this.statusText = this.add.text(width / 2, height / 2 - 100, '제작 준비 완료', {
       fontSize: '24px',
       color: '#ffff00',
       stroke: '#000',
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    this.goldText = this.add.text(width / 2, height / 2 - 200, 'Gold: Loading...', {
+    this.goldText = this.add.text(width / 2, height / 2 - 200, '골드: 로딩 중...', {
       fontSize: '28px',
       color: '#ffd700',
       stroke: '#000',
@@ -138,7 +143,7 @@ export class MainScene extends Phaser.Scene {
       .on('pointerover', () => this.enhanceButton.setFillStyle(0x5588ff))
       .on('pointerout', () => this.enhanceButton.setFillStyle(0x3366ff));
 
-    this.add.text(width / 2, buttonY, 'ENHANCE', {
+    this.add.text(width / 2, buttonY, '강화', {
       fontSize: '28px',
       color: '#fff',
       fontStyle: 'bold'
@@ -161,7 +166,7 @@ export class MainScene extends Phaser.Scene {
       .on('pointerover', () => this.sellButton.setFillStyle(0x32cd32)) // Lime green hover
       .on('pointerout', () => this.sellButton.setFillStyle(0x228b22)); // Forest green default
 
-    this.sellText = this.add.text(width / 2, sellButtonY, 'SELL', {
+    this.sellText = this.add.text(width / 2, sellButtonY, '판매', {
       fontSize: '20px',
       color: '#fff',
       fontStyle: 'bold'
@@ -181,7 +186,7 @@ export class MainScene extends Phaser.Scene {
     this.playHammerAnimation();
 
     this.input.enabled = false;
-    this.statusText.setText('Forging...');
+    this.statusText.setText('제작 중...');
     this.statusText.setColor('#ffff00');
 
     try {
@@ -201,7 +206,7 @@ export class MainScene extends Phaser.Scene {
 
     } catch (error: any) {
       console.error(error);
-      const errorMessage = error.response?.data?.error || 'Network Error';
+      const errorMessage = error.response?.data?.error || '네트워크 오류';
       this.statusText.setText(errorMessage);
       this.statusText.setColor('#ff0000'); // Red for error
       this.input.enabled = true;
@@ -212,38 +217,21 @@ export class MainScene extends Phaser.Scene {
     if (this.currentLevel <= 0) return;
     if (!this.input.enabled) return;
 
-    if (!confirm(`현재 레벨(Lv.${this.currentLevel})의 아이템을 판매하시겠습니까?`)) return;
-
-    this.input.enabled = false;
-    this.statusText.setText('Selling...');
-
-    try {
-      const res = await client.post('/api/v1/game/sell', {
-        currentLevel: this.currentLevel,
-        itemBaseValue: this.itemBaseValue
-      });
-
-      const message = res.data.message;
-      alert(message); // Simple feedback for now
-
-      this.resetLevel();
-      this.updateUserInfo();
-      this.input.enabled = true;
-
-    } catch (e: any) {
-      console.error(e);
-      const errorMessage = e.response?.data?.error || 'Sales Failed';
-      this.statusText.setText(errorMessage);
-      this.statusText.setColor('#ff0000');
-      this.input.enabled = true;
+    // Delegate to React if callback exists
+    if (this.onSellRequest) {
+      this.onSellRequest();
+      return;
     }
+
+    // Fallback if no callback (shouldn't happen with correct setup)
+    console.warn('onSellRequest callback not set');
   }
 
   private async updateUserInfo() {
     try {
       const response = await client.get('/api/v1/user/me');
       const { gold } = response.data;
-      this.goldText.setText(`Gold: ${gold.toLocaleString()}`);
+      this.goldText.setText(`골드: ${gold.toLocaleString()}`);
     } catch (e) {
       console.error(e);
     }
@@ -277,7 +265,7 @@ export class MainScene extends Phaser.Scene {
 
   private handleResult(result: string, newLevel: number, message: string) {
     this.currentLevel = newLevel;
-    this.levelText.setText(`Level: +${this.currentLevel}`);
+    this.levelText.setText(`레벨: +${this.currentLevel}`);
     this.statusText.setText(message);
     this.updateCostText(); // Update cost after level change
     this.updateSellButtonVisibility(); // Check visibility
@@ -339,7 +327,7 @@ export class MainScene extends Phaser.Scene {
   private updateCostText() {
     // Cost = Base(100) * (Level + 1)^2
     const cost = this.itemBaseValue * Math.pow(this.currentLevel + 1, 2);
-    this.costText.setText(`Cost: ${cost.toLocaleString()} G`);
+    this.costText.setText(`비용: ${cost.toLocaleString()} G`);
   }
 
   private updateSellButtonVisibility() {
@@ -361,7 +349,7 @@ export class MainScene extends Phaser.Scene {
 
   public resetLevel() {
     this.currentLevel = 0;
-    this.levelText.setText(`Level: +${this.currentLevel}`);
+    this.levelText.setText(`레벨: +${this.currentLevel}`);
 
     // Reset visual
     this.updateSwordSprite();
@@ -375,7 +363,7 @@ export class MainScene extends Phaser.Scene {
 
     // Optional: Reset effect
     this.cameras.main.flash(500, 255, 255, 255);
-    this.statusText.setText('Reset for new contract');
+    this.statusText.setText('새로운 의뢰를 위해 초기화');
     this.statusText.setColor('#ffff00');
   }
 }

@@ -44,12 +44,12 @@ const InventoryModal: React.FC<InventoryModalProps> = ({ isOpen, onClose }) => {
       <div className="bg-gray-900 border-4 border-yellow-600 rounded-lg p-6 w-[500px] text-white shadow-2xl relative">
         <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-white">X</button>
 
-        <h2 className="text-2xl font-bold text-center text-yellow-400 mb-4">Inventory (Bag)</h2>
+        <h2 className="text-2xl font-bold text-center text-yellow-400 mb-4">인벤토리 (가방)</h2>
 
         {/* Inventory Section */}
         <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto">
           {loading ? (
-            <p className="text-gray-400 text-center py-4">Loading...</p>
+            <p className="text-gray-400 text-center py-4">로딩 중...</p>
           ) : relics.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-gray-500">
               <span className="text-4xl mb-2">🎒</span>
@@ -67,7 +67,7 @@ const InventoryModal: React.FC<InventoryModalProps> = ({ isOpen, onClose }) => {
                     <span className="text-xs bg-purple-900 px-1 rounded text-purple-200">Lv.{relic.level}</span>
                   </div>
                   <p className="text-xs text-gray-400">{relic.description}</p>
-                  <p className="text-xs text-green-400">Current Effect: {(relic.currentEffect * (relic.relicType.includes('RATE') ? 100 : (relic.relicType.includes('COST') ? 100 : (relic.relicType.includes('REWARD') ? 100 : 1)))).toFixed(1)}%</p>
+                  <p className="text-xs text-green-400">현재 효과: {(relic.currentEffect * (relic.relicType.includes('RATE') ? 100 : (relic.relicType.includes('COST') ? 100 : (relic.relicType.includes('REWARD') ? 100 : 1)))).toFixed(1)}%</p>
                 </div>
               </div>
             ))
