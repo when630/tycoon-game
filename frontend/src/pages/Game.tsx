@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import PhaserGame from '../components/PhaserGame';
+import PhaserGame, { PhaserGameRef } from '../components/PhaserGame';
+import { useRef } from 'react';
+import client from '../api/client';
 
 import ContractCard from '../components/ContractCard';
 import RankingModal from '../components/RankingModal';
@@ -14,6 +16,7 @@ const Game: React.FC = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0); // Trigger re-render of ContractCard
   const [isRankingOpen, setIsRankingOpen] = useState(false);
+  const phaserRef = useRef<PhaserGameRef>(null);
   const [isRelicOpen, setIsRelicOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
@@ -24,9 +27,13 @@ const Game: React.FC = () => {
   };
 
   const handleContractComplete = () => {
-    // Contract completed, maybe play a sound or show a toast
     setRefreshKey(prev => prev + 1);
+    // Reset sword level in Phaser
+    if (phaserRef.current) {
+      phaserRef.current.resetLevel();
+    }
   };
+
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
@@ -62,6 +69,7 @@ const Game: React.FC = () => {
 
           <div className="h-6 w-px bg-gray-600 mx-2"></div>
 
+
           <span>PLAYER: <strong>{nickname}</strong></span>
           <button
             onClick={handleLogout}
@@ -88,7 +96,7 @@ const Game: React.FC = () => {
         {/* Inventory Modal */}
         <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} />
 
-        <PhaserGame onLevelChange={setCurrentLevel} />
+        <PhaserGame ref={phaserRef} onLevelChange={setCurrentLevel} />
       </main>
     </div>
   );

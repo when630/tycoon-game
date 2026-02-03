@@ -29,7 +29,6 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
       // Delay for animation
       setTimeout(() => {
         alert(`유물 획득!\n${newRelic.name} (Lv.${newRelic.level})\n${newRelic.description}`);
-        alert(`유물 획득!\n${newRelic.name} (Lv.${newRelic.level})\n${newRelic.description}`);
         setLoading(false);
         setChestState('CLOSED');
       }, 500);
@@ -37,11 +36,11 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
     } catch (e: any) {
       setLoading(false);
       setChestState('CLOSED');
-      if (e.response && e.response.status === 500) {
-        // Ideally backend should return 400 for logic error, but simple check
-        alert("골드가 부족합니다! (비용: 5000 G)");
+
+      if (e.response && e.response.data && e.response.data.error) {
+        alert(e.response.data.error);
       } else {
-        alert("뽑기 실패");
+        alert("뽑기 실패했습니다.");
       }
     }
   };

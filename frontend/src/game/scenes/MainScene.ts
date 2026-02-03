@@ -18,8 +18,10 @@ export class MainScene extends Phaser.Scene {
   private levelText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
   private goldText!: Phaser.GameObjects.Text;
+  private costText!: Phaser.GameObjects.Text;
   private enhanceButton!: Phaser.GameObjects.Rectangle;
-  // private shape!: Phaser.GameObjects.Rectangle; // Generic shape reference if needed -> Removed
+  private sellButton!: Phaser.GameObjects.Rectangle; // New Sell Button
+  private sellText!: Phaser.GameObjects.Text;
 
   private onLevelChange?: (level: number) => void;
 
@@ -70,7 +72,6 @@ export class MainScene extends Phaser.Scene {
     this.hammer.setAngle(45);
     this.hammer.setVisible(false);
 
-    // 5. Particles
     // 5. Particles
     this.successEmitter = this.add.particles(0, 0, 'particle_success', {
       speed: { min: 150, max: 250 },
@@ -128,22 +129,53 @@ export class MainScene extends Phaser.Scene {
     // Initial Fetch
     this.updateUserInfo();
 
-    // 7. Enhance Button
-    this.enhanceButton = this.add.rectangle(width / 2, height - 100, 200, 60, 0x3366ff)
+    // 7. Enhance Button (Moved up slightly to make room)
+    const buttonY = height - 120;
+
+    this.enhanceButton = this.add.rectangle(width / 2, buttonY, 200, 60, 0x3366ff)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.handleEnhance())
       .on('pointerover', () => this.enhanceButton.setFillStyle(0x5588ff))
       .on('pointerout', () => this.enhanceButton.setFillStyle(0x3366ff));
 
-    this.add.text(width / 2, height - 100, 'ENHANCE', {
+    this.add.text(width / 2, buttonY, 'ENHANCE', {
       fontSize: '28px',
       color: '#fff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
+
+    // Cost Text (Above Enhance Button)
+    this.costText = this.add.text(width / 2, buttonY - 50, '', {
+      fontSize: '20px',
+      color: '#ffcccc',
+      stroke: '#000',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+
+    // 8. Sell Button (Below Enhance Button)
+    const sellButtonY = height - 50;
+
+    this.sellButton = this.add.rectangle(width / 2, sellButtonY, 150, 40, 0x228b22)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.handleSell())
+      .on('pointerover', () => this.sellButton.setFillStyle(0x32cd32)) // Lime green hover
+      .on('pointerout', () => this.sellButton.setFillStyle(0x228b22)); // Forest green default
+
+    this.sellText = this.add.text(width / 2, sellButtonY, 'SELL', {
+      fontSize: '20px',
+      color: '#fff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    this.updateCostText();
+    this.updateSellButtonVisibility();
   }
 
   private async handleEnhance() {
     if (!this.input.enabled) return;
+
+    // Check if user has enough gold (Frontend pre-check optional, backend handles it)
+    // But let's let backend handle it via error message we implemented.
 
     // Visual Feedback: Hammer Animation
     this.playHammerAnimation();
@@ -167,9 +199,41 @@ export class MainScene extends Phaser.Scene {
         this.updateUserInfo(); // Refresh gold
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      this.statusText.setText('Network Error');
+      const errorMessage = error.response?.data?.error || 'Network Error';
+      this.statusText.setText(errorMessage);
+      this.statusText.setColor('#ff0000'); // Red for error
+      this.input.enabled = true;
+    }
+  }
+
+  private async handleSell() {
+    if (this.currentLevel <= 0) return;
+    if (!this.input.enabled) return;
+
+    if (!confirm(`현재 레벨(Lv.${this.currentLevel})의 아이템을 판매하시겠습니까?`)) return;
+
+    this.input.enabled = false;
+    this.statusText.setText('Selling...');
+
+    try {
+      const res = await client.post('/api/v1/game/sell', {
+        currentLevel: this.currentLevel,
+        itemBaseValue: this.itemBaseValue
+      });
+
+      const message = res.data.message;
+      alert(message); // Simple feedback for now
+
+      this.resetLevel();
+      this.updateUserInfo();
+      this.input.enabled = true;
+
+    } catch (e: any) {
+      console.error(e);
+      const errorMessage = e.response?.data?.error || 'Sales Failed';
+      this.statusText.setText(errorMessage);
       this.statusText.setColor('#ff0000');
       this.input.enabled = true;
     }
@@ -215,6 +279,8 @@ export class MainScene extends Phaser.Scene {
     this.currentLevel = newLevel;
     this.levelText.setText(`Level: +${this.currentLevel}`);
     this.statusText.setText(message);
+    this.updateCostText(); // Update cost after level change
+    this.updateSellButtonVisibility(); // Check visibility
 
     if (this.onLevelChange) {
       this.onLevelChange(this.currentLevel);
@@ -269,7 +335,47 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  // Helper/Visual Logic
+  private updateCostText() {
+    // Cost = Base(100) * (Level + 1)^2
+    const cost = this.itemBaseValue * Math.pow(this.currentLevel + 1, 2);
+    this.costText.setText(`Cost: ${cost.toLocaleString()} G`);
+  }
+
+  private updateSellButtonVisibility() {
+    const canSell = this.currentLevel > 0;
+    this.sellButton.setVisible(canSell);
+    this.sellText.setVisible(canSell);
+    // Disable interaction when hidden? SetVisible usually handles input too in newer Phaser 3? 
+    // Better to explicit.
+    if (canSell) {
+      this.sellButton.setInteractive();
+    } else {
+      this.sellButton.disableInteractive();
+    }
+  }
+
   // Getter helper properties due to scope issues in callbacks
   get width() { return this.scale.width; }
   get height() { return this.scale.height; }
+
+  public resetLevel() {
+    this.currentLevel = 0;
+    this.levelText.setText(`Level: +${this.currentLevel}`);
+
+    // Reset visual
+    this.updateSwordSprite();
+    this.updateCostText(); // Reset cost display
+    this.updateSellButtonVisibility(); // Hide button
+
+    // Notify React (although React likely already knows via onComplete, keeping sync is good)
+    if (this.onLevelChange) {
+      this.onLevelChange(this.currentLevel);
+    }
+
+    // Optional: Reset effect
+    this.cameras.main.flash(500, 255, 255, 255);
+    this.statusText.setText('Reset for new contract');
+    this.statusText.setColor('#ffff00');
+  }
 }
