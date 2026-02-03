@@ -5,6 +5,7 @@ import PhaserGame from '../components/PhaserGame';
 import ContractCard from '../components/ContractCard';
 import RankingModal from '../components/RankingModal';
 import RelicModal from '../components/RelicModal';
+import InventoryModal from '../components/InventoryModal';
 import { useState } from 'react';
 
 const Game: React.FC = () => {
@@ -14,6 +15,7 @@ const Game: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0); // Trigger re-render of ContractCard
   const [isRankingOpen, setIsRankingOpen] = useState(false);
   const [isRelicOpen, setIsRelicOpen] = useState(false);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -40,6 +42,14 @@ const Game: React.FC = () => {
           >
             <img src="/assets/trophy_icon.png" alt="Rank" className="w-5 h-5 pixelated" />
             RANKING
+          </button>
+
+          <button
+            onClick={() => setIsInventoryOpen(true)}
+            className="flex items-center gap-2 px-3 py-1 rounded bg-orange-700 hover:bg-orange-600 text-white font-bold transition-colors ml-2"
+          >
+            <span className="text-xl">🎒</span>
+            BAG
           </button>
 
           <button
@@ -74,6 +84,9 @@ const Game: React.FC = () => {
 
         {/* Relic Modal */}
         <RelicModal isOpen={isRelicOpen} onClose={() => setIsRelicOpen(false)} />
+
+        {/* Inventory Modal */}
+        <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} />
 
         <PhaserGame onLevelChange={setCurrentLevel} />
       </main>

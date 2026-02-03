@@ -17,6 +17,7 @@ export class MainScene extends Phaser.Scene {
   // UI Elements
   private levelText!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
+  private goldText!: Phaser.GameObjects.Text;
   private enhanceButton!: Phaser.GameObjects.Rectangle;
   // private shape!: Phaser.GameObjects.Rectangle; // Generic shape reference if needed -> Removed
 
@@ -117,6 +118,16 @@ export class MainScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5);
 
+    this.goldText = this.add.text(width / 2, height / 2 - 200, 'Gold: Loading...', {
+      fontSize: '28px',
+      color: '#ffd700',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(0.5);
+
+    // Initial Fetch
+    this.updateUserInfo();
+
     // 7. Enhance Button
     this.enhanceButton = this.add.rectangle(width / 2, height - 100, 200, 60, 0x3366ff)
       .setInteractive({ useHandCursor: true })
@@ -153,6 +164,7 @@ export class MainScene extends Phaser.Scene {
       this.time.delayedCall(800, () => {
         this.handleResult(result, newLevel, message);
         this.input.enabled = true;
+        this.updateUserInfo(); // Refresh gold
       });
 
     } catch (error) {
@@ -160,6 +172,16 @@ export class MainScene extends Phaser.Scene {
       this.statusText.setText('Network Error');
       this.statusText.setColor('#ff0000');
       this.input.enabled = true;
+    }
+  }
+
+  private async updateUserInfo() {
+    try {
+      const response = await client.get('/api/v1/user/me');
+      const { gold } = response.data;
+      this.goldText.setText(`Gold: ${gold.toLocaleString()}`);
+    } catch (e) {
+      console.error(e);
     }
   }
 

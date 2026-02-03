@@ -20,7 +20,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://backend:8080
+      - CHOKIDAR_USEPOLLING=true # Better file watching in WSL
     depends_on:
       - backend
     restart: always

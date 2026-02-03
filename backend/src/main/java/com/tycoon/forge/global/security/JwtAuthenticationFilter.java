@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -16,7 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
-@Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -25,17 +26,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = resolveToken(request);
+        
+        if (token != null) {
+            log.info("Processing internal filter for URI: {}", request.getRequestURI());
+            if (jwtTokenProvider.validateToken(token)) {
+                UUID userId = jwtTokenProvider.getUserId(token);
+                log.info("Token validated for UserID: {}", userId);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            UUID userId = jwtTokenProvider.getUserId(token);
-            
-            // Create a simple UserDetails object since we don't have roles/permissions complex logic yet
-            // Password is empty string and roles list is empty
-            // Create UserPrincipal instead of generic User
-            UserDetails userDetails = new UserPrincipal(userId, userId.toString(), "", Collections.emptyList());
-            
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                UserDetails userDetails = new UserPrincipal(userId, userId.toString(), "", Collections.emptyList());
+                
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                log.error("Token validation failed for token: {}", token.substring(0, Math.min(token.length(), 10)) + "...");
+            }
+        } else {
+             // log.debug("No token found for URI: {}", request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
 
-interface Relic {
-  id: number;
-  name: string;
-  description: string;
-  level: number;
-  currentEffect: number;
-  relicType: string;
-}
 
 interface RelicModalProps {
   isOpen: boolean;
@@ -16,25 +8,14 @@ interface RelicModalProps {
 }
 
 const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalProps) => {
-  const [relics, setRelics] = useState<Relic[]>([]);
   const [loading, setLoading] = useState(false);
   const [chestState, setChestState] = useState<'CLOSED' | 'OPEN'>('CLOSED');
 
   useEffect(() => {
     if (isOpen) {
-      fetchRelics();
       setChestState('CLOSED');
     }
   }, [isOpen]);
-
-  const fetchRelics = async () => {
-    try {
-      const res = await client.get('/api/v1/relic/my');
-      setRelics(res.data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const handleGacha = async () => {
     if (loading) return;
@@ -48,7 +29,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
       // Delay for animation
       setTimeout(() => {
         alert(`유물 획득!\n${newRelic.name} (Lv.${newRelic.level})\n${newRelic.description}`);
-        fetchRelics();
+        alert(`유물 획득!\n${newRelic.name} (Lv.${newRelic.level})\n${newRelic.description}`);
         setLoading(false);
         setChestState('CLOSED');
       }, 500);
@@ -92,30 +73,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
           </button>
         </div>
 
-        {/* Inventory Section */}
-        <h3 className="text-lg font-bold mb-2">My Relics</h3>
-        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-          {relics.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">보유한 유물이 없습니다.</p>
-          ) : (
-            relics.map((relic: Relic) => (
-              <div key={relic.id} className="flex items-center bg-gray-800 p-2 rounded border border-gray-700">
-                <div className="w-10 h-10 bg-gray-700 rounded mr-3 flex items-center justify-center">
-                  {/* Generic icon for now, ideally mapped by type */}
-                  <img src="/assets/icon_hammer_relic.png" alt="Icon" className="w-8 h-8 pixelated" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-yellow-500">{relic.name}</span>
-                    <span className="text-xs bg-purple-900 px-1 rounded text-purple-200">Lv.{relic.level}</span>
-                  </div>
-                  <p className="text-xs text-gray-400">{relic.description}</p>
-                  <p className="text-xs text-green-400">Current Effect: {(relic.currentEffect * (relic.relicType.includes('RATE') ? 100 : (relic.relicType.includes('COST') ? 100 : (relic.relicType.includes('REWARD') ? 100 : 1)))).toFixed(1)}%</p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {/* Inventory Section Removed */}
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ const client = axios.create({
   },
 });
 
+console.log('API Client initialized with baseURL:', client.defaults.baseURL); // Debug log
+
 // Add a request interceptor to inject the token
 client.interceptors.request.use(
   (config: any) => { // Using any temporarily or better strict type if possible, but simplest is any or specific type.
@@ -34,10 +36,11 @@ client.interceptors.response.use(
   (error: any) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       // Token expired or invalid
-      console.warn('Authentication error, logging out...', error.response.status);
-      localStorage.removeItem('token');
-      localStorage.removeItem('nickname');
-      window.location.href = '/';
+      console.warn('Authentication error (401/403):', error.response);
+      // alert('Auth Error! Check Console. Status: ' + error.response.status);
+      // localStorage.removeItem('token'); // Temporarily keep token to debug
+      // localStorage.removeItem('nickname');
+      // window.location.href = '/'; // Disable redirect for debugging
     }
     return Promise.reject(error);
   }

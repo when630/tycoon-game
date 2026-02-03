@@ -41,7 +41,7 @@ public class User extends BaseTimeEntity {
     @Builder
     public User(String nickname, String provider, String providerId) {
         this.nickname = nickname;
-        this.gold = BigInteger.ZERO;
+        this.gold = BigInteger.valueOf(10000);
         this.reputation = 0;
         this.highestLevel = 0;
         this.provider = provider;

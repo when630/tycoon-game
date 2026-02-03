@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -42,11 +44,20 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
-            return !claims.getPayload().getExpiration().before(new Date());
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            return true;
+        } catch (io.jsonwebtoken.security.SecurityException | io.jsonwebtoken.MalformedJwtException e) {
+            log.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.error("Expired JWT token: {}", e.getMessage());
+        } catch (io.jsonwebtoken.UnsupportedJwtException e) {
+            log.error("Unsupported JWT token: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims string is empty: {}", e.getMessage());
         } catch (Exception e) {
-            return false;
+             log.error("JWT Verification failed: {}", e.getMessage(), e);
         }
+        return false;
     }
 
     public UUID getUserId(String token) {
