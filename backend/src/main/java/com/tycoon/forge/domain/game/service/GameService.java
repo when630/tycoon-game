@@ -18,10 +18,10 @@ public class GameService {
     @Transactional
     public BigInteger sellItem(UUID userId, int currentLevel, BigInteger itemBaseValue) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (currentLevel <= 0) {
-            throw new IllegalArgumentException("Cannot sell a level 0 item.");
+            throw new IllegalArgumentException("0강 아이템은 판매할 수 없습니다.");
         }
 
         // Calculate Total Cost spent to reach this level

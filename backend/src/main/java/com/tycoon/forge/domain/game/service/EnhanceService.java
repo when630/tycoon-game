@@ -29,7 +29,7 @@ public class EnhanceService {
     @Transactional
     public EnhanceDto.Response enhance(UUID userId, EnhanceDto.Request request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         int currentLevel = request.getCurrentLevel();
         BigInteger itemBaseValue = request.getItemBaseValue();
@@ -43,7 +43,7 @@ public class EnhanceService {
         BigInteger enhanceCost = BigInteger.valueOf(reducedCostVal);
 
         if (user.getGold().compareTo(enhanceCost) < 0) {
-            throw new IllegalStateException("Not enough gold to enhance. Required: " + enhanceCost);
+            throw new IllegalStateException("골드가 부족합니다.");
         }
 
         // Deduct Cost First
@@ -110,20 +110,20 @@ public class EnhanceService {
                 reputationChange = 5 + newLevel; 
                 user.updateReputation(reputationChange);
                 
-                message = "강화 성공! (비용: " + enhanceCost + " G)";
+                message = "강화 성공!";
                 break;
                 
             case FAIL:
                 if (currentLevel >= 10) {
                      newLevel = Math.max(0, currentLevel - 1);
-                     message = "강화 실패... 등급 하락 (비용: " + enhanceCost + " G)";
+                     message = "강화 실패... 등급 하락";
                 } else if (currentLevel >= 5) {
                      newLevel = Math.max(0, currentLevel - 1); // Drop in mid tier too? Or just fail? Let's make it drop for tension
-                     message = "강화 실패... 등급 하락 (비용: " + enhanceCost + " G)";
+                     message = "강화 실패... 등급 하락";
                 } else {
                      // Safe zone fail -> No drop
                      newLevel = currentLevel; 
-                     message = "강화 실패... (비용: " + enhanceCost + " G)";
+                     message = "강화 실패...";
                 }
                 reputationChange = -2;
                 user.decreaseReputation(2);

@@ -52,4 +52,16 @@ public class Contract extends BaseTimeEntity {
     public void fail() {
         this.status = ContractStatus.FAILED;
     }
+
+    public void accept() {
+        if (this.status == ContractStatus.AVAILABLE) {
+            this.status = ContractStatus.PENDING;
+        } else {
+            throw new IllegalStateException("수주 가능한 의뢰가 아닙니다.");
+        }
+    }
+
+    public void makeAvailable() {
+        this.status = ContractStatus.AVAILABLE;
+    }
 }

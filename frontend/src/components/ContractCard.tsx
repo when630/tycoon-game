@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
+import MessageModal from './MessageModal';
+import ConfirmModal from './ConfirmModal';
 
 interface Contract {
   id: number;
@@ -12,172 +14,247 @@ interface Contract {
 interface ContractCardProps {
   currentLevel: number; // Current level of the item being forged
   onComplete: () => void; // Callback when contract is completed
+  onRefresh: () => void; // Callback to refresh user data without success feedback
+  refreshTrigger: number; // Signal to refresh list
 }
 
-const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete }: ContractCardProps) => {
-  const [contract, setContract] = useState<Contract | null>(null);
+const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete, onRefresh, refreshTrigger }: ContractCardProps) => {
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
-  const [npcImage, setNpcImage] = useState('/assets/npc_knight.png');
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false); // Global collapse (icon only)
+  const [isExpanded, setIsExpanded] = useState(false); // Show all items vs limited
+
+  // Visual helper
+  const [npcImages, setNpcImages] = useState<Record<number, string>>({});
+
+  // Message Modal
+  const [messageModal, setMessageModal] = useState<{ isOpen: boolean; message: string; type: 'NORMAL' | 'SUCCESS' | 'ERROR' }>({
+    isOpen: false,
+    message: '',
+    type: 'NORMAL'
+  });
+
+  // Confirm Modal (for Give Up)
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; message: string; contractId: number | null }>({
+    isOpen: false,
+    message: '',
+    contractId: null
+  });
+
+  const requestGiveUp = (contractId: number) => {
+    setConfirmModal({
+      isOpen: true,
+      message: "정말 의뢰를 포기하시겠습니까?\n포기 시 명성이 100 삭감됩니다.",
+      contractId
+    });
+  };
+
+  const handleGiveUp = async () => {
+    if (confirmModal.contractId === null || loading) return;
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    setLoading(true);
+
+    try {
+      await client.post(`/api/v1/contract/cancel/${confirmModal.contractId}`);
+      fetchActiveContracts();
+      // Since reputation drops, we should notify the parent to refresh user info. 
+      // Use onRefresh to silently update HUD without completion effects
+      onRefresh();
+
+      setMessageModal({
+        isOpen: true,
+        message: "의뢰를 포기했습니다. 명성이 하락했습니다.",
+        type: 'ERROR'
+      });
+
+    } catch (e: any) {
+      console.error(e);
+      setMessageModal({
+        isOpen: true,
+        message: "의뢰 포기 중 오류가 발생했습니다.",
+        type: 'ERROR'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchCurrentContract();
-    // Randomize NPC
-    setNpcImage(Math.random() > 0.5 ? '/assets/npc_knight.png' : '/assets/npc_merchant.png');
-  }, []);
+    fetchActiveContracts();
+  }, [refreshTrigger]);
 
-  const fetchCurrentContract = async () => {
+  const fetchActiveContracts = async () => {
     try {
-      const res = await client.get('/api/v1/contract/current');
-      if (res.data) {
-        setContract(res.data);
-      }
+      const res = await client.get('/api/v1/contract/my');
+      setContracts(res.data);
+
+      // Assign random NPCs
+      setNpcImages(prev => {
+        const newMap = { ...prev };
+        res.data.forEach((c: Contract) => {
+          if (!newMap[c.id]) {
+            newMap[c.id] = Math.random() > 0.5 ? '/assets/npc_knight.png' : '/assets/npc_merchant.png';
+          }
+        });
+        return newMap;
+      });
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleAcceptNew = async () => {
+  const handleComplete = async (contractId: number) => {
+    if (loading) return;
     setLoading(true);
     try {
-      const res = await client.post('/api/v1/contract/new');
-      setContract(res.data);
-      // Change NPC on new contract
-      setNpcImage(Math.random() > 0.5 ? '/assets/npc_knight.png' : '/assets/npc_merchant.png');
-    } catch (e) {
-      console.error(e);
+      await client.post(`/api/v1/contract/complete/${contractId}`, { itemLevel: currentLevel });
+
+      setMessageModal({
+        isOpen: true,
+        message: "의뢰 완료! 보상을 받았습니다.",
+        type: 'SUCCESS'
+      });
+
+      fetchActiveContracts();
+      onComplete();
+    } catch (e: any) {
+      setMessageModal({
+        isOpen: true,
+        message: e.response?.data?.error || "조건을 만족하지 못했거나 오류가 발생했습니다.",
+        type: 'ERROR'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleComplete = async () => {
-    if (!contract) return;
-    setLoading(true);
-    try {
-      await client.post('/api/v1/contract/complete', { itemLevel: currentLevel });
-      setContract(null); // Clear contract (or show success state)
-      alert("의뢰 완료! 보상을 받았습니다.");
-      onComplete(); // Refresh user data
-    } catch (e) {
-      alert("조건을 만족하지 못했거나 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!contract) {
+  if (contracts.length === 0) {
     return (
-      <div className="absolute top-4 right-4 w-64 p-4 bg-gray-800 bg-opacity-90 border-4 border-yellow-600 rounded shadow-lg text-white font-mono z-10">
-        <p className="mb-4 text-center">현재 의뢰가 없습니다.</p>
-        <button
-          onClick={handleAcceptNew}
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded"
-        >
-          새 의뢰 받기
-        </button>
+      <div className="absolute top-24 right-4 w-64 p-4 bg-gray-800 bg-opacity-90 border-4 border-gray-600 rounded shadow-lg text-white font-mono z-10 animate-pulse text-center">
+        <p className="mb-2">진행 중인 의뢰가 없습니다.</p>
+        <p className="text-xs text-yellow-500">"의뢰소"에서 새 의뢰를 받아보세요!</p>
       </div>
     );
   }
 
-  const isAchieved = currentLevel >= contract.targetLevel;
+  // Contract List Logic
+  const MAX_VISIBLE = 3;
+  const visibleContracts = isExpanded ? contracts : contracts.slice(0, MAX_VISIBLE);
+  const hiddenCount = contracts.length - visibleContracts.length;
 
-  return (
-    <div className={`absolute top-24 md:top-24 right-4 z-10 flex items-start flex-row-reverse transition-all duration-300 ${isCollapsed ? 'w-auto' : 'w-[90%] md:w-[500px]'}`}>
-
-      {/* NPC Portrait (Right Side) */}
+  // Global collapsed state (Icon only)
+  if (isCollapsed) {
+    return (
       <div
-        className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform z-20"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        title={isCollapsed ? "의뢰 펼치기" : "의뢰 접기"}
+        className="absolute top-24 right-4 z-10 cursor-pointer hover:scale-105 transition-transform"
+        onClick={() => setIsCollapsed(false)}
+        title="의뢰 목록 펼치기"
       >
-        <div className="w-full h-full rounded-full border-4 border-[#8b4513] overflow-hidden bg-gray-900 shadow-lg">
-          <img src={npcImage} alt="NPC" className="w-full h-full object-cover pixelated" />
-        </div>
+        <div className="w-16 h-16 rounded-full border-4 border-[#8b4513] overflow-visible bg-gray-900 shadow-lg relative flex items-center justify-center">
+          <img src={npcImages[contracts[0]?.id] || '/assets/npc_knight.png'} alt="NPC" className="w-full h-full object-cover rounded-full pixelated opacity-50" />
+          <span className="absolute inset-0 flex items-center justify-center text-2xl z-10 drop-shadow-md">📜</span>
 
-        {/* Level Indicator Badge on Portrait */}
-        <div className="absolute -bottom-2 -left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full border border-white shadow">
-          Lv.{contract.targetLevel}
+          {/* Badge Number */}
+          <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#1a1c23] z-20 shadow-md">
+            {contracts.length}
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Speech Bubble (Left Side) */}
-      {!isCollapsed && (
-        <div className="relative mr-4 flex-1">
-          {/* Bubble Tail */}
-          <div className="absolute top-8 -right-3 w-0 h-0 border-t-[10px] border-t-transparent border-l-[15px] border-l-[#e8d5b5] border-b-[10px] border-b-transparent drop-shadow-sm filter z-10"></div>
+  return (
+    <div className="absolute top-24 right-4 z-10 flex flex-col items-end gap-2 w-64 md:w-[300px] transition-all duration-300">
 
-          <div className="bg-[#e8d5b5] border-4 border-[#8b4513] rounded-lg p-4 shadow-xl text-gray-900 animate-fade-in relative">
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-[#c2a67e] pb-2 mb-2">
-              <span className="font-bold text-[#5c3a21]">
-                {npcImage.includes('knight') ? '왕실 기사' : '떠돌이 상인'}
-              </span>
+      {/* Header / Collapse Button */}
+      <div className="flex justify-between items-center w-full bg-gray-900/90 p-2 rounded border border-gray-600 mb-1">
+        <span className="text-sm font-bold text-gray-300">진행 중 의뢰 ({contracts.length})</span>
+        <button
+          onClick={() => setIsCollapsed(true)}
+          className="text-gray-400 hover:text-white"
+        >
+          ✕ 접기
+        </button>
+      </div>
+
+      {/* Contract Items Stack */}
+      {visibleContracts.map((contract) => {
+        const isAchieved = currentLevel >= contract.targetLevel;
+        const npcImg = npcImages[contract.id] || '/assets/npc_knight.png';
+
+        return (
+          <div key={contract.id} className="relative w-full bg-[#e8d5b5] border-4 border-[#8b4513] rounded-lg p-3 shadow-lg flex gap-3 items-center animate-slide-in-right">
+
+            {/* Portrait */}
+            <div className="w-12 h-12 flex-shrink-0 rounded-full border-2 border-[#5c3a21] overflow-hidden bg-gray-800">
+              <img src={npcImg} alt="NPC" className="w-full h-full object-cover pixelated" />
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-baseline">
+                <span className="font-bold text-[#5c3a21] text-sm">+{contract.targetLevel}강 납품</span>
+                <span className="text-green-700 font-bold text-xs">{contract.rewardGold.toLocaleString()} G</span>
+              </div>
+              <div className="text-xs text-gray-600 truncate">
+                진행: <span className={isAchieved ? "text-green-600 font-bold" : "text-gray-500"}>{currentLevel}</span> / {contract.targetLevel}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-1 items-end">
+              {/* Complete Button (Small) */}
               <button
-                onClick={() => setIsCollapsed(true)}
-                className="text-[#8b4513] hover:text-red-600 font-bold"
+                onClick={() => handleComplete(contract.id)}
+                disabled={!isAchieved || loading}
+                className={`px-3 py-1 rounded text-xs font-bold border-b-2 active:border-b-0 active:translate-y-0.5 transition-all w-16 mb-1 ${isAchieved
+                  ? 'bg-green-700 text-yellow-100 border-green-900 hover:bg-green-600 animate-pulse'
+                  : 'bg-gray-400 text-gray-200 border-gray-600 cursor-not-allowed'
+                  }`}
               >
-                ✕
+                {isAchieved ? "완료" : "진행"}
               </button>
-            </div>
 
-            {/* Dialogue */}
-            <p className="text-sm mb-4 leading-relaxed font-serif">
-              "이봐, 자네 실력을 좀 보여주게. <br />
-              <span className="text-red-700 font-bold bg-yellow-200/50 px-1 rounded">+{contract.targetLevel}강 검</span>이 급히 필요하다네!"
-            </p>
-
-            {/* Rewards */}
-            <div className="bg-[#d4c0a1]/50 p-2 rounded border border-[#c2a67e] mb-3 text-sm">
-              <div className="flex justify-between mb-1">
-                <span className="text-[#5c3a21]">성공 보수:</span>
-                <span className="text-green-700 font-bold">{contract.rewardGold.toLocaleString()} G</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">위약금:</span>
-                <span className="text-gray-600">-{contract.penaltyGold.toLocaleString()} G</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              {isAchieved ? (
-                <button
-                  onClick={handleComplete}
-                  disabled={loading}
-                  className="flex-1 bg-green-700 hover:bg-green-600 text-yellow-100 font-bold py-2 rounded shadow-md border-b-4 border-green-900 active:border-b-0 active:translate-y-1 transition-all animate-pulse"
-                >
-                  납품하기
-                </button>
-              ) : (
-                <div className="flex-1 bg-gray-500 text-white font-bold py-2 rounded text-center text-xs flex items-center justify-center cursor-not-allowed opacity-70">
-                  진행 중 ({currentLevel}/{contract.targetLevel})
-                </div>
-              )}
-
+              {/* Give Up Button */}
               <button
-                onClick={handleAcceptNew}
+                onClick={() => requestGiveUp(contract.id)}
                 disabled={loading}
-                className="px-3 bg-red-800 hover:bg-red-700 text-white text-xs rounded shadow border-b-2 border-red-950 active:border-b-0 active:translate-y-px transition-all"
-                title="새 의뢰 받기"
+                className="text-[10px] text-red-500 hover:text-red-700 underline font-semibold"
               >
                 포기
               </button>
             </div>
           </div>
-        </div>
+        );
+      })}
+
+      {/* Show More / Show Less Button */}
+      {contracts.length > MAX_VISIBLE && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="bg-gray-800/80 hover:bg-gray-700 text-gray-300 text-xs py-1 px-4 rounded-full border border-gray-600 backdrop-blur-sm transition-colors"
+        >
+          {isExpanded ? "▲ 접기" : `▼ 외 ${hiddenCount}건 더 보기`}
+        </button>
       )}
 
-      {/* Minimized Bubble (Tooltip style when collapsed) */}
-      {isCollapsed && (
-        <div className="mr-3 mt-4 bg-gray-900/80 text-white text-xs px-3 py-1 rounded-full border border-yellow-500 backdrop-blur-sm animate-bounce-slow">
-          목표: +{contract.targetLevel}강
-        </div>
-      )}
+      <MessageModal
+        isOpen={messageModal.isOpen}
+        message={messageModal.message}
+        type={messageModal.type}
+        onClose={() => setMessageModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        message={confirmModal.message}
+        onConfirm={handleGiveUp}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
 
     </div>
   );
 };
 
 export default ContractCard;
+

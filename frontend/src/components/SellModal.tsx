@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
+import MessageModal from './MessageModal';
 
 interface SellModalProps {
   isOpen: boolean;
@@ -13,6 +14,13 @@ const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentLevel, it
   const [loading, setLoading] = useState(false);
   const [estimatedReward, setEstimatedReward] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Message Modal
+  const [messageModal, setMessageModal] = useState<{ isOpen: boolean; message: string; type: 'NORMAL' | 'SUCCESS' | 'ERROR' }>({
+    isOpen: false,
+    message: '',
+    type: 'NORMAL'
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -37,12 +45,23 @@ const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentLevel, it
 
       // Success
       onSellComplete();
-      // We could show a success message here, but usually closing and showing effect is enough.
-      // Or we can keep it open to show success state? Let's close it for now.
-      alert(res.data.message); // Temporarily keep alert for result or pass message back?
-      // Better UX: Show result in modal before closing?
-      // For now, let's close and let Game/Phaser handle the reset visual.
-      onClose();
+
+      // Instead of Alert, we might just close or show success modal.
+      // User says "Replace system alert to game modal".
+      // But here, if we close immediately, the modal might disappear too fast.
+      // Let's show the modal first, then close on modal close?
+      // Or just standard "close this modal, show message modal".
+
+      // Since MessageModal needs to be rendered, we can keep SellModal open? No, SellModal usually closes.
+      // If we render MessageModal INSIDE SellModal, and SellModal closes, MessageModal also closes.
+      // So MessageModal should be handled by parent? OR, we keep SellModal open but show MessageModal on top?
+      // Actually, standard behavior: Show Success, then on Close of Success, Close SellModal.
+      setMessageModal({
+        isOpen: true,
+        message: res.data.message,
+        type: 'SUCCESS'
+      });
+
     } catch (e: any) {
       console.error(e);
       if (e.response && e.response.data && e.response.data.error) {
@@ -55,11 +74,18 @@ const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentLevel, it
     }
   };
 
+  const handleMessageClose = () => {
+    setMessageModal(prev => ({ ...prev, isOpen: false }));
+    if (messageModal.type === 'SUCCESS') {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in">
-      <div className="bg-gray-800 border-4 border-green-700 p-6 rounded-lg shadow-2xl w-96 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in p-4">
+      <div className="bg-gray-800 border-4 border-green-700 p-6 rounded-lg shadow-2xl w-full max-w-sm relative">
         <h2 className="text-2xl font-bold text-green-500 mb-4 text-center">장비 판매</h2>
 
         <div className="text-center mb-6">
@@ -109,8 +135,17 @@ const SellModal: React.FC<SellModalProps> = ({ isOpen, onClose, currentLevel, it
           </button>
         </div>
       </div>
+
+      <MessageModal
+        isOpen={messageModal.isOpen}
+        message={messageModal.message}
+        type={messageModal.type}
+        onClose={handleMessageClose}
+      />
+
     </div>
   );
 };
 
 export default SellModal;
+

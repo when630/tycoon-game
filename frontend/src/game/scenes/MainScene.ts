@@ -15,27 +15,36 @@ export class MainScene extends Phaser.Scene {
   private destroyEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   // UI Elements
-  private levelText!: Phaser.GameObjects.Text;
-  private statusText!: Phaser.GameObjects.Text;
-  private goldText!: Phaser.GameObjects.Text;
+  // Text removed for React HUD refactor
   private costText!: Phaser.GameObjects.Text;
   private enhanceButton!: Phaser.GameObjects.Rectangle;
-  private sellButton!: Phaser.GameObjects.Rectangle; // New Sell Button
+  private enhanceText!: Phaser.GameObjects.Text;
+  private sellButton!: Phaser.GameObjects.Rectangle;
   private sellText!: Phaser.GameObjects.Text;
 
+  // Callbacks for React HUD
   private onLevelChange?: (level: number) => void;
   private onSellRequest?: () => void;
+  private onGoldChange?: (gold: number) => void;
+  private onReputationChange?: (reputation: number) => void;
+  private onStatusChange?: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void;
 
   constructor() {
     super({ key: 'MainScene' });
   }
 
-  public setLevelChangeCallback(callback: (level: number) => void) {
-    this.onLevelChange = callback;
-  }
-
-  public setSellRequestCallback(callback: () => void) {
-    this.onSellRequest = callback;
+  public setCallbacks(
+    onLevelChange: (level: number) => void,
+    onSellRequest: () => void,
+    onGoldChange: (gold: number) => void,
+    onReputationChange: (reputation: number) => void,
+    onStatusChange: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void
+  ) {
+    this.onLevelChange = onLevelChange;
+    this.onSellRequest = onSellRequest;
+    this.onGoldChange = onGoldChange;
+    this.onReputationChange = onReputationChange;
+    this.onStatusChange = onStatusChange;
   }
 
   preload() {
@@ -46,7 +55,6 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
-    // Assuming 1024 width for 4 frames = 256px frame width
     this.load.spritesheet('sword', '/assets/sword_sheet.png', {
       frameWidth: 256,
       frameHeight: 1024
@@ -59,19 +67,18 @@ export class MainScene extends Phaser.Scene {
     // 1. Background
     this.background = this.add.image(width / 2, height / 2, 'background');
     this.background.setDisplaySize(width, height);
-    this.background.setAlpha(0.6); // Darken slightly
+    this.background.setAlpha(0.6);
 
-    // 2. Anvil (Center lower)
+    // 2. Anvil 
     this.anvil = this.add.image(width / 2, height / 2 + 100, 'anvil');
     this.anvil.setScale(0.5);
 
-    // 3. Sword (On top of anvil)
-    // Anvil y is at +100. Let's put the sword's bottom tip exactly hitting the anvil surface.
+    // 3. Sword 
     this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword', 0);
     this.sword.setScale(0.35);
-    this.sword.setOrigin(0.5, 1); // Pivot at bottom center
+    this.sword.setOrigin(0.5, 1);
 
-    // 4. Hammer (Ready to strike)
+    // 4. Hammer
     this.hammer = this.add.image(width / 2 + 80, height / 2 - 20, 'hammer');
     this.hammer.setScale(0.25);
     this.hammer.setAngle(45);
@@ -89,7 +96,7 @@ export class MainScene extends Phaser.Scene {
       speed: { min: 50, max: 100 },
       scale: { start: 0.4, end: 0 },
       alpha: { start: 0.6, end: 0 },
-      gravityY: 150, // Falling debris
+      gravityY: 150,
       emitting: false
     });
 
@@ -101,40 +108,13 @@ export class MainScene extends Phaser.Scene {
       emitting: false
     });
 
-    // 6. UI Text
-    this.add.text(width / 2, 50, 'Forge Tycoon', {
-      fontSize: '48px',
-      color: '#ffaa00',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 6
-    }).setOrigin(0.5);
-
-    this.levelText = this.add.text(width / 2, height / 2 - 150, `레벨: +${this.currentLevel}`, {
-      fontSize: '32px',
-      color: '#00ff00',
-      stroke: '#000',
-      strokeThickness: 4
-    }).setOrigin(0.5);
-
-    this.statusText = this.add.text(width / 2, height / 2 - 100, '제작 준비 완료', {
-      fontSize: '24px',
-      color: '#ffff00',
-      stroke: '#000',
-      strokeThickness: 4
-    }).setOrigin(0.5);
-
-    this.goldText = this.add.text(width / 2, height / 2 - 200, '골드: 로딩 중...', {
-      fontSize: '28px',
-      color: '#ffd700',
-      stroke: '#000',
-      strokeThickness: 4
-    }).setOrigin(0.5);
+    // 6. UI Text - Text removed for React HUD refactor
+    // Title removed as requested (present in Login screen)
 
     // Initial Fetch
     this.updateUserInfo();
 
-    // 7. Enhance Button (Moved up slightly to make room)
+    // 7. Enhance Button
     const buttonY = height - 120;
 
     this.enhanceButton = this.add.rectangle(width / 2, buttonY, 200, 60, 0x3366ff)
@@ -143,18 +123,18 @@ export class MainScene extends Phaser.Scene {
       .on('pointerover', () => this.enhanceButton.setFillStyle(0x5588ff))
       .on('pointerout', () => this.enhanceButton.setFillStyle(0x3366ff));
 
-    this.add.text(width / 2, buttonY, '강화', {
+    this.enhanceText = this.add.text(width / 2, buttonY, '강화', {
       fontSize: '28px',
       color: '#fff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    // Cost Text (Above Enhance Button)
-    this.costText = this.add.text(width / 2, buttonY - 50, '', {
+    // Cost Text (Initially empty, will be positioned in handleResize)
+    this.costText = this.add.text(width / 2, buttonY, '', {
       fontSize: '20px',
       color: '#ffcccc',
       stroke: '#000',
-      strokeThickness: 3
+      strokeThickness: 2
     }).setOrigin(0.5);
 
     // 8. Sell Button (Below Enhance Button)
@@ -163,8 +143,8 @@ export class MainScene extends Phaser.Scene {
     this.sellButton = this.add.rectangle(width / 2, sellButtonY, 150, 40, 0x228b22)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.handleSell())
-      .on('pointerover', () => this.sellButton.setFillStyle(0x32cd32)) // Lime green hover
-      .on('pointerout', () => this.sellButton.setFillStyle(0x228b22)); // Forest green default
+      .on('pointerover', () => this.sellButton.setFillStyle(0x32cd32))
+      .on('pointerout', () => this.sellButton.setFillStyle(0x228b22));
 
     this.sellText = this.add.text(width / 2, sellButtonY, '판매', {
       fontSize: '20px',
@@ -172,22 +152,95 @@ export class MainScene extends Phaser.Scene {
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
+    // Initial Position Setup
+    this.handleResize({ width, height } as Phaser.Structs.Size);
+
+    // Resize Handler
+    this.scale.on('resize', this.handleResize, this);
+
     this.updateCostText();
     this.updateSellButtonVisibility();
   }
 
+  private handleResize(gameSize: Phaser.Structs.Size) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // Responsive Scale Factors
+    // Base design usually 1920x1080 or mobile 375x812 used for reference
+    const isMobile = width < 768;
+    const scaleFactor = isMobile ? Math.min(width / 400, height / 800) : Math.min(width / 1200, height / 900);
+    const textScale = Math.max(scaleFactor, 0.7);
+
+    // 1. Background
+    this.background.setPosition(centerX, centerY);
+    this.background.setDisplaySize(width, height);
+
+    // 2. Anvil
+    const anvilY = centerY + (isMobile ? 50 : 100);
+    this.anvil.setPosition(centerX, anvilY);
+    this.anvil.setScale(isMobile ? 0.35 : 0.5);
+
+    // 3. Sword
+    const swordY = anvilY - (isMobile ? 20 : 40); // Slightly above anvil center
+    this.sword.setPosition(centerX, swordY);
+    this.sword.setScale(isMobile ? 0.25 : 0.35);
+
+    // 4. Hammer
+    // Adjust hammer relative to anvil
+    const hammerX = centerX + (isMobile ? 50 : 80);
+    const hammerY = anvilY - (isMobile ? 60 : 120);
+    this.hammer.setPosition(hammerX, hammerY);
+    this.hammer.setScale(isMobile ? 0.15 : 0.25);
+
+    // 5. Title Text (optional, if kept) -> Removed in logic but if added back:
+    // this.titleText.setPosition...
+
+    // 7. Enhance Button
+    // Position at bottom area, but keep safe margin
+    const buttonMarginBottom = isMobile ? 180 : 120; // More space on mobile for safe area/thumbs
+    const buttonY = height - buttonMarginBottom;
+    const buttonWidth = isMobile ? width * 0.6 : 200;
+    const buttonHeight = isMobile ? 80 : 80;
+
+    this.enhanceButton.setPosition(centerX, buttonY);
+    this.enhanceButton.setSize(buttonWidth, buttonHeight);
+
+    // Enhance Text (Top inside button)
+    this.enhanceText.setPosition(centerX, buttonY - 15);
+    this.enhanceText.setFontSize(isMobile ? '24px' : '28px');
+
+    // Cost Text (Bottom inside button)
+    this.costText.setPosition(centerX, buttonY + 15);
+    this.costText.setFontSize(isMobile ? '16px' : '18px');
+    this.costText.setColor('#ffcccc');
+    this.costText.setStroke('#000', 2);
+
+    // Check if enhanceText exists (it was created via add.text but not assigned to property in previous code, need to fix that if we want to move it. 
+    // Wait, the previous code didn't assign separate vars for texts inside button. 
+    // I should probably start finding them or just recreate them cleanly.
+    // For now, I'll assume I need to manage them. 
+    // Let's rely on finding them by name if possible or better, store them in class props.
+    // Since I'm replacing a big chunk, I'll upgrade the class props to store text too.
+  }
+
+  // Need to update class properties to store texts for resizing
+  // ...
+
+
   private async handleEnhance() {
     if (!this.input.enabled) return;
 
-    // Check if user has enough gold (Frontend pre-check optional, backend handles it)
-    // But let's let backend handle it via error message we implemented.
-
     // Visual Feedback: Hammer Animation
     this.playHammerAnimation();
+    this.costText.setVisible(false); // Hide cost during animation
 
     this.input.enabled = false;
-    this.statusText.setText('제작 중...');
-    this.statusText.setColor('#ffff00');
+
+    if (this.onStatusChange) this.onStatusChange('제작 중...', 'NORMAL');
 
     try {
       const response = await client.post('/api/v1/game/enhance', {
@@ -201,14 +254,15 @@ export class MainScene extends Phaser.Scene {
       this.time.delayedCall(800, () => {
         this.handleResult(result, newLevel, message);
         this.input.enabled = true;
+        this.costText.setVisible(true); // Show cost again
         this.updateUserInfo(); // Refresh gold
       });
 
     } catch (error: any) {
       console.error(error);
       const errorMessage = error.response?.data?.error || '네트워크 오류';
-      this.statusText.setText(errorMessage);
-      this.statusText.setColor('#ff0000'); // Red for error
+
+      if (this.onStatusChange) this.onStatusChange(errorMessage, 'FAIL');
       this.input.enabled = true;
     }
   }
@@ -223,15 +277,15 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
-    // Fallback if no callback (shouldn't happen with correct setup)
     console.warn('onSellRequest callback not set');
   }
 
   private async updateUserInfo() {
     try {
       const response = await client.get('/api/v1/user/me');
-      const { gold } = response.data;
-      this.goldText.setText(`골드: ${gold.toLocaleString()}`);
+      const { gold, reputation } = response.data;
+      if (this.onGoldChange) this.onGoldChange(gold);
+      if (this.onReputationChange) this.onReputationChange(reputation);
     } catch (e) {
       console.error(e);
     }
@@ -265,20 +319,22 @@ export class MainScene extends Phaser.Scene {
 
   private handleResult(result: string, newLevel: number, message: string) {
     this.currentLevel = newLevel;
-    this.levelText.setText(`레벨: +${this.currentLevel}`);
-    this.statusText.setText(message);
+
+    // Notify Status
+    let type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY' = 'NORMAL';
+    if (result === 'SUCCESS') type = 'SUCCESS';
+    else if (result === 'FAIL') type = 'FAIL';
+    else if (result === 'DESTROY') type = 'DESTROY';
+
+    if (this.onStatusChange) this.onStatusChange(message, type);
+    if (this.onLevelChange) this.onLevelChange(this.currentLevel);
+
     this.updateCostText(); // Update cost after level change
     this.updateSellButtonVisibility(); // Check visibility
-
-    if (this.onLevelChange) {
-      this.onLevelChange(this.currentLevel);
-    }
 
     this.updateSwordSprite();
 
     if (result === 'SUCCESS') {
-      this.statusText.setColor('#00ff00');
-
       // Success Effect: Particles & Scale
       this.successEmitter.explode(50, this.sword.x, this.sword.y - 100);
 
@@ -291,13 +347,11 @@ export class MainScene extends Phaser.Scene {
       });
 
     } else if (result === 'FAIL') {
-      this.statusText.setColor('#ffaa00');
       this.cameras.main.shake(100, 0.01);
 
       this.failEmitter.explode(30, this.sword.x, this.sword.y - 50);
 
     } else if (result === 'DESTROY') {
-      this.statusText.setColor('#ff0000');
       this.cameras.main.shake(300, 0.05);
 
       this.sword.setVisible(false);
@@ -334,8 +388,7 @@ export class MainScene extends Phaser.Scene {
     const canSell = this.currentLevel > 0;
     this.sellButton.setVisible(canSell);
     this.sellText.setVisible(canSell);
-    // Disable interaction when hidden? SetVisible usually handles input too in newer Phaser 3? 
-    // Better to explicit.
+
     if (canSell) {
       this.sellButton.setInteractive();
     } else {
@@ -349,21 +402,19 @@ export class MainScene extends Phaser.Scene {
 
   public resetLevel() {
     this.currentLevel = 0;
-    this.levelText.setText(`레벨: +${this.currentLevel}`);
 
     // Reset visual
     this.updateSwordSprite();
     this.updateCostText(); // Reset cost display
     this.updateSellButtonVisibility(); // Hide button
 
-    // Notify React (although React likely already knows via onComplete, keeping sync is good)
     if (this.onLevelChange) {
       this.onLevelChange(this.currentLevel);
     }
 
     // Optional: Reset effect
     this.cameras.main.flash(500, 255, 255, 255);
-    this.statusText.setText('새로운 의뢰를 위해 초기화');
-    this.statusText.setColor('#ffff00');
+
+    if (this.onStatusChange) this.onStatusChange('새로운 의뢰를 위해 초기화', 'NORMAL');
   }
 }

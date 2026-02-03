@@ -29,10 +29,10 @@ public class RelicService {
     @Transactional
     public RelicDto.Response gachaRelic(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (user.getGold().compareTo(GACHA_COST) < 0) {
-            throw new IllegalStateException("Not enough gold. Cost: " + GACHA_COST);
+            throw new IllegalStateException("골드가 부족합니다. (필요: " + GACHA_COST + ")");
         }
 
         user.subtractGold(GACHA_COST);
