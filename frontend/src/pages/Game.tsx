@@ -85,7 +85,7 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-[100vh] bg-black overflow-hidden font-sans select-none">
+    <div className="relative w-full h-[100dvh] bg-black overflow-hidden font-sans select-none">
 
       {/* HUD Layer */}
       <GameHUD

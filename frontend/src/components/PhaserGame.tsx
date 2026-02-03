@@ -59,7 +59,7 @@ const PhaserGame = forwardRef<PhaserGameRef, PhaserGameProps>(({ onLevelChange, 
     }
   }, [onLevelChange, onSellRequest, onGoldChange, onReputationChange, onStatusChange]);
 
-  return <div id="game-container" />;
+  return <div id="game-container" className="absolute inset-0 w-full h-full z-0" />;
 });
 
 export default PhaserGame;
