@@ -21,18 +21,23 @@ public class Contract extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private int targetLevel;
 
+    @Column(precision = 38, scale = 0)
     private BigInteger rewardGold;
 
+    @Column(precision = 38, scale = 0)
     private BigInteger penaltyGold;
 
+    @Column(nullable = true)
     private LocalDateTime timeLimit; // Optional
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ContractStatus status;
 
     @Builder

@@ -20,6 +20,9 @@ public class ContractController {
 
     @PostMapping("/available/generate")
     public ResponseEntity<List<ContractDto.Response>> generateAvailableContracts(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
+            throw new IllegalArgumentException("인증 정보가 없습니다.");
+        }
         return ResponseEntity.ok(contractService.generateAvailableContracts(userPrincipal.getId()));
     }
 
