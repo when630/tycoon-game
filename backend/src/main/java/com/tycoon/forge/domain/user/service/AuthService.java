@@ -21,7 +21,10 @@ public class AuthService {
         User user = userRepository.findAll().stream()
                 .filter(u -> u.getNickname().equals(nickname))
                 .findFirst()
-                .orElseGet(() -> userRepository.save(User.builder().nickname(nickname).build()));
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .nickname(nickname)
+                        .gold(java.math.BigInteger.valueOf(10000))
+                        .build()));
 
         return jwtTokenProvider.createToken(user.getId());
     }
