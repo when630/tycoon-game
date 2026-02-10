@@ -264,13 +264,16 @@ export class MainScene extends Phaser.Scene {
       // Success Effect: Particles & Scale
       this.successEmitter.explode(50, this.sword.x, this.sword.y - 100);
 
+      // Animation removed by user request
+      /*
       this.tweens.add({
         targets: this.sword,
-        scaleX: 0.85, // Increased from 0.6
-        scaleY: 0.85, // Increased from 0.6
+        scaleX: 0.85, 
+        scaleY: 0.85, 
         duration: 200,
         yoyo: true,
       });
+      */
 
     } else if (result === 'FAIL') {
       this.cameras.main.shake(100, 0.01);
