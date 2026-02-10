@@ -63,6 +63,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statu
               <span className="text-5xl font-black text-white drop-shadow-md">
                 +{currentLevel}
               </span>
+              <span className="absolute bottom-2 right-2 text-[10px] text-gray-500 font-mono">v2.0</span>
             </div>
           </div>
 
