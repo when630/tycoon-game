@@ -23,7 +23,7 @@ public class AuthService {
                 .findFirst()
                 .orElseGet(() -> userRepository.save(User.builder()
                         .nickname(nickname)
-                        .gold(10000L)
+                        .gold(java.math.BigInteger.valueOf(10000))
                         .build()));
 
         return jwtTokenProvider.createToken(user.getId());

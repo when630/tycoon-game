@@ -4,6 +4,7 @@ import com.tycoon.forge.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigInteger;
 import java.util.UUID;
 
 @Getter
@@ -24,7 +25,7 @@ public class User extends BaseTimeEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private Long gold = 10000L;
+    private BigInteger gold = BigInteger.valueOf(10000);
 
     @Builder.Default
     @Column(nullable = false)
