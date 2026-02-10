@@ -71,7 +71,7 @@ export class MainScene extends Phaser.Scene {
 
     // 3. Sword 
     this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword_0');
-    this.sword.setScale(0.5); // Increased from 0.35
+    this.sword.setScale(0.75); // Increased from 0.5
     this.sword.setOrigin(0.5, 1);
 
     // 4. Hammer
@@ -134,7 +134,7 @@ export class MainScene extends Phaser.Scene {
     // 3. Sword
     const swordY = anvilY - (isMobile ? 20 : 40); // Slightly above anvil center
     this.sword.setPosition(centerX, swordY);
-    this.sword.setScale(isMobile ? 0.35 : 0.5); // Increased from 0.25/0.35
+    this.sword.setScale(isMobile ? 0.5 : 0.75); // Increased from 0.35/0.5
 
     // 4. Hammer
     const hammerX = centerX + (isMobile ? 50 : 80);
@@ -266,8 +266,8 @@ export class MainScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: this.sword,
-        scaleX: 0.6, // Increased from 0.4
-        scaleY: 0.6, // Increased from 0.4
+        scaleX: 0.85, // Increased from 0.6
+        scaleY: 0.85, // Increased from 0.6
         duration: 200,
         yoyo: true,
       });
