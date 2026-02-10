@@ -30,7 +30,7 @@ public class UserController {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.setGold(user.getGold() + 10000L);
+        user.setGold(user.getGold().add(BigInteger.valueOf(10000)));
         userRepository.save(user);
 
         return ResponseEntity.ok(user);
