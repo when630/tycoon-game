@@ -79,12 +79,17 @@ const GameHUD: React.FC<GameHUDProps> = ({
 
         {/* Right: Gold, Reputation & Menu */}
         <div className="flex items-center gap-3 md:gap-6">
-          {/* Reputation (Desktop Only) */}
-          <div className="hidden lg:flex flex-col items-end">
-            <span className="text-[10px] text-gray-400 font-bold tracking-wider flex items-center gap-1">
-              <Trophy size={10} className="text-purple-400" /> REPUTATION
-            </span>
-            <span className="text-sm font-bold text-purple-200">{reputation.toLocaleString()}</span>
+          {/* Reputation */}
+          <div className="flex items-center gap-2 md:gap-3 bg-gray-900/50 px-2.5 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-600/30">
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-purple-400 font-bold tracking-wider hidden md:block">REPUTATION</span>
+              <span className="text-sm md:text-lg font-mono font-bold text-purple-200">
+                {reputation.toLocaleString()}
+              </span>
+            </div>
+            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center shadow-lg border border-purple-400">
+              <Trophy size={12} className="text-purple-100 md:w-4 md:h-4" />
+            </div>
           </div>
 
           {/* Gold */}
