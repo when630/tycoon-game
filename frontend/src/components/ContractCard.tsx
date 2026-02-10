@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ScrollText } from 'lucide-react';
 import client from '../api/client';
 import MessageModal from './MessageModal';
 import ConfirmModal from './ConfirmModal';
@@ -146,16 +147,15 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete, o
   if (isCollapsed) {
     return (
       <div
-        className="absolute top-24 right-4 z-10 cursor-pointer hover:scale-105 transition-transform"
+        className="absolute top-28 right-4 z-10 cursor-pointer hover:scale-110 transition-transform"
         onClick={() => setIsCollapsed(false)}
         title="의뢰 목록 펼치기"
       >
-        <div className="w-16 h-16 rounded-full border-4 border-[#8b4513] overflow-visible bg-gray-900 shadow-lg relative flex items-center justify-center">
-          <img src={npcImages[contracts[0]?.id] || '/assets/npc_knight.png'} alt="NPC" className="w-full h-full object-cover rounded-full pixelated opacity-50" />
-          <span className="absolute inset-0 flex items-center justify-center text-2xl z-10 drop-shadow-md">📜</span>
+        <div className="w-14 h-14 rounded-full border-4 border-[#8b4513] bg-[#e8d5b5] shadow-lg relative flex items-center justify-center transform hover:rotate-12 transition-transform">
+          <ScrollText size={28} className="text-[#5c3a21]" />
 
           {/* Badge Number */}
-          <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#1a1c23] z-20 shadow-md">
+          <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-[#1a1c23] z-20 shadow-md">
             {contracts.length}
           </div>
         </div>

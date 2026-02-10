@@ -81,7 +81,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statu
       </div>
 
       {/* Center Status Message (Adjusted position) */}
-      <div className="absolute top-[25%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full px-4">
+      <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full px-4">
         <h1 className={`text-4xl md:text-6xl font-black italic tracking-tighter transition-all duration-300 break-keep drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] ${getStatusColor()} ${statusType !== 'NORMAL' ? 'scale-110' : 'scale-100'}`}>
           {statusMessage}
         </h1>
