@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
+import GameModal from './GameModal';
 import MessageModal from './MessageModal';
 import ConfirmModal from './ConfirmModal';
 
@@ -127,77 +128,78 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1c23] border-4 border-[#8b4513] rounded-lg p-4 md:p-6 w-full max-w-[700px] h-[80vh] md:h-[500px] text-white shadow-2xl relative flex flex-col font-mono">
-        <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-white">X</button>
-
-        <h2 className="text-3xl font-bold text-center text-[#ffaa00] mb-2 border-b border-gray-700 pb-2">
-          📜 의뢰소 (Contract Office)
-        </h2>
-
-        <div className="flex justify-end mb-2">
+    <>
+      <GameModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="의뢰소 (Contract Office)"
+        theme="BLUE"
+        className="max-w-2xl h-[600px] flex flex-col"
+      >
+        <div className="flex justify-between items-center mb-4 px-1">
+          <span className="text-gray-400 text-sm">
+            * 평판이 높을수록 고액 의뢰가 등장합니다.
+          </span>
           <button
             onClick={handleRefreshClick}
             disabled={loading}
-            className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-gray-300"
+            className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-gray-300 border border-gray-600 hover:border-gray-500 transition-colors"
           >
             🔄 목록 갱신
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 p-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto grid grid-cols-1 gap-4 p-1 custom-scrollbar">
           {loading && contracts.length === 0 ? (
-            <div className="col-span-2 text-center py-20 text-gray-500">
+            <div className="text-center py-20 text-gray-500">
               의뢰 목록을 불러오는 중...
             </div>
           ) : contracts.length === 0 ? (
-            <div className="col-span-2 text-center py-20 text-gray-500">
+            <div className="text-center py-20 text-gray-500">
               수주 가능한 의뢰가 없습니다.
             </div>
           ) : (
             contracts.map(contract => (
-              <div key={contract.id} className="bg-[#2d2f36] p-4 rounded border border-gray-600 hover:border-[#ffaa00] transition-colors relative flex flex-col justify-between h-[230px]">
-                {/* Badge */}
-                <span className="absolute -top-2 -left-2 bg-red-800 text-white text-xs px-2 py-1 rounded shadow z-10">
-                  목표: +{contract.targetLevel}강
-                </span>
-
-                <div className="flex gap-3">
-                  {/* Portrait */}
-                  <div className="w-16 h-16 flex-shrink-0 rounded-full border-2 border-[#5c3a21] overflow-hidden bg-gray-800 mt-2">
-                    <img src={npcImages[contract.id] || '/assets/npc_knight.png'} alt="NPC" className="w-full h-full object-cover pixelated" />
-                  </div>
-
-                  <div className="flex-1 mt-2 text-gray-300 text-sm">
-                    <p className="mb-2">"이봐, <strong>+{contract.targetLevel}강 검</strong>이 필요하네."</p>
-
-                    <div className="bg-black/30 p-2 rounded text-xs">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-400">보상</span>
-                        <span className="text-[#ffd700] font-bold">{contract.rewardGold.toLocaleString()} G</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">위약금</span>
-                        <span className="text-gray-500">-{contract.penaltyGold.toLocaleString()} G</span>
-                      </div>
-                    </div>
-                  </div>
+              <div key={contract.id} className="bg-gray-800/80 p-4 rounded-lg border border-gray-600 hover:border-blue-400 transition-colors relative flex gap-4 group">
+                {/* Portrait */}
+                <div className="w-20 h-20 flex-shrink-0 rounded-lg border-2 border-gray-600 overflow-hidden bg-gray-900 group-hover:border-blue-400/50 transition-colors">
+                  <img src={npcImages[contract.id] || '/assets/npc_knight.png'} alt="NPC" className="w-full h-full object-cover pixelated" />
                 </div>
 
-                <button
-                  onClick={() => handleAccept(contract.id)}
-                  className="w-full mt-3 bg-[#8b4513] hover:bg-[#a05a2c] text-white py-2 rounded font-bold border-b-4 border-[#5a2d0c] active:border-b-0 active:translate-y-1 transition-all"
-                >
-                  수주하기
-                </button>
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-blue-200">
+                        의뢰 요청서 #{contract.id}
+                      </span>
+                      <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded border border-blue-800">
+                        목표: +{contract.targetLevel}강
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-400 italic mb-2">
+                      "이봐, <strong>+{contract.targetLevel}강 검</strong>을 만들어 줄 수 있나?"
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-end bg-black/20 p-2 rounded">
+                    <div className="text-xs">
+                      <div className="text-gray-400">보상 <span className="text-yellow-400 font-bold ml-1">{contract.rewardGold.toLocaleString()} G</span></div>
+                      <div className="text-gray-500">위약금 <span className="text-gray-400 ml-1">-{contract.penaltyGold.toLocaleString()} G</span></div>
+                    </div>
+                    <button
+                      onClick={() => handleAccept(contract.id)}
+                      className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-bold shadow-lg shadow-blue-900/50 transition-transform active:scale-95"
+                    >
+                      ✍️ 수주하기
+                    </button>
+                  </div>
+                </div>
               </div>
             ))
           )}
         </div>
-      </div>
+      </GameModal>
 
       {/* Nested Modals */}
       <MessageModal
@@ -212,8 +214,7 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
-    </div>
+    </>
   );
 };
-
 export default ContractOfficeModal;
