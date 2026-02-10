@@ -1,0 +1,14 @@
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://yamabiko.proxy.rlwy.net:24607/railway
+    username: root
+    password: jvoGWIXVeNkXmUMLNbBnFyxhVErqZjaW
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
