@@ -30,14 +30,23 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
 
   const handleGacha = async () => {
     if (loading) return;
+
+    // Reset to initial state for re-roll animation
+    setObtainedRelic(null);
+    setChestState('CLOSED');
     setLoading(true);
-    setChestState('OPEN'); // Animation trigger
 
     try {
+      // Minimum delay to show shaking animation (optional, but feels better)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const res = await client.post('/api/v1/relic/gacha');
       const newRelic: Relic = res.data;
 
-      // Delay for animation
+      // Open the chest
+      setChestState('OPEN');
+
+      // Delay to show open chest before showing result
       setTimeout(() => {
         setObtainedRelic(newRelic);
         setLoading(false);
@@ -49,7 +58,6 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
         setChestState('CLOSED');
 
         if (e.response && e.response.data && e.response.data.error) {
-          // Using a simple overlay or toast would be better, but for error fallback alert is okay-ish, or use a state for error
           alert(e.response.data.error);
         } else {
           alert("뽑기 실패했습니다.");
@@ -93,7 +101,7 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
                 <img
                   src={chestState === 'CLOSED' ? '/assets/relic_chest_closed.png' : '/assets/relic_chest_open.png'}
                   alt="Chest"
-                  className={`w-full h-full object-contain pixelated drop-shadow-2xl ${loading ? 'animate-bounce' : ''}`}
+                  className={`w-full h-full object-contain pixelated drop-shadow-2xl ${loading && chestState === 'CLOSED' ? 'animate-bounce' : ''}`}
                 />
               </div>
             </div>
