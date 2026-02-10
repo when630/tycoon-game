@@ -14,17 +14,12 @@ export class MainScene extends Phaser.Scene {
   private failEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private destroyEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
-  // UI Elements
-  // Text removed for React HUD refactor
-  private costText!: Phaser.GameObjects.Text;
-  private enhanceButton!: Phaser.GameObjects.Rectangle;
-  private enhanceText!: Phaser.GameObjects.Text;
-  private sellButton!: Phaser.GameObjects.Rectangle;
-  private sellText!: Phaser.GameObjects.Text;
+  // UI Elements - visual feedback only
+  // Removed buttons as they are now in React
 
   // Callbacks for React HUD
   private onLevelChange?: (level: number) => void;
-  private onSellRequest?: () => void;
+  // private onSellRequest?: () => void; // Removed
   private onGoldChange?: (gold: number) => void;
   private onReputationChange?: (reputation: number) => void;
   private onStatusChange?: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void;
@@ -35,13 +30,13 @@ export class MainScene extends Phaser.Scene {
 
   public setCallbacks(
     onLevelChange: (level: number) => void,
-    onSellRequest: () => void,
+    // onSellRequest: () => void, // Removed
     onGoldChange: (gold: number) => void,
     onReputationChange: (reputation: number) => void,
     onStatusChange: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void
   ) {
     this.onLevelChange = onLevelChange;
-    this.onSellRequest = onSellRequest;
+    // this.onSellRequest = onSellRequest; // Removed
     this.onGoldChange = onGoldChange;
     this.onReputationChange = onReputationChange;
     this.onStatusChange = onStatusChange;
@@ -108,58 +103,14 @@ export class MainScene extends Phaser.Scene {
       emitting: false
     });
 
-    // 6. UI Text - Text removed for React HUD refactor
-    // Title removed as requested (present in Login screen)
-
     // Initial Fetch
     this.updateUserInfo();
-
-    // 7. Enhance Button
-    const buttonY = height - 120;
-
-    this.enhanceButton = this.add.rectangle(width / 2, buttonY, 200, 60, 0x3366ff)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.handleEnhance())
-      .on('pointerover', () => this.enhanceButton.setFillStyle(0x5588ff))
-      .on('pointerout', () => this.enhanceButton.setFillStyle(0x3366ff));
-
-    this.enhanceText = this.add.text(width / 2, buttonY, '강화', {
-      fontSize: '28px',
-      color: '#fff',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Cost Text (Initially empty, will be positioned in handleResize)
-    this.costText = this.add.text(width / 2, buttonY, '', {
-      fontSize: '20px',
-      color: '#ffcccc',
-      stroke: '#000',
-      strokeThickness: 2
-    }).setOrigin(0.5);
-
-    // 8. Sell Button (Below Enhance Button)
-    const sellButtonY = height - 50;
-
-    this.sellButton = this.add.rectangle(width / 2, sellButtonY, 150, 40, 0x228b22)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.handleSell())
-      .on('pointerover', () => this.sellButton.setFillStyle(0x32cd32))
-      .on('pointerout', () => this.sellButton.setFillStyle(0x228b22));
-
-    this.sellText = this.add.text(width / 2, sellButtonY, '판매', {
-      fontSize: '20px',
-      color: '#fff',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
 
     // Initial Position Setup
     this.handleResize({ width, height } as Phaser.Structs.Size);
 
     // Resize Handler
     this.scale.on('resize', this.handleResize, this);
-
-    this.updateCostText();
-    this.updateSellButtonVisibility();
   }
 
   private handleResize(gameSize: Phaser.Structs.Size) {
@@ -168,11 +119,7 @@ export class MainScene extends Phaser.Scene {
 
     const centerX = width / 2;
     const centerY = height / 2;
-
-    // Responsive Scale Factors
-    // Base design usually 1920x1080 or mobile 375x812 used for reference
     const isMobile = width < 768;
-
 
     // 1. Background
     this.background.setPosition(centerX, centerY);
@@ -189,54 +136,22 @@ export class MainScene extends Phaser.Scene {
     this.sword.setScale(isMobile ? 0.25 : 0.35);
 
     // 4. Hammer
-    // Adjust hammer relative to anvil
     const hammerX = centerX + (isMobile ? 50 : 80);
     const hammerY = anvilY - (isMobile ? 60 : 120);
     this.hammer.setPosition(hammerX, hammerY);
     this.hammer.setScale(isMobile ? 0.15 : 0.25);
-
-    // 5. Title Text (optional, if kept) -> Removed in logic but if added back:
-    // this.titleText.setPosition...
-
-    // 7. Enhance Button
-    // Position at bottom area, but keep safe margin
-    const buttonMarginBottom = isMobile ? 180 : 120; // More space on mobile for safe area/thumbs
-    const buttonY = height - buttonMarginBottom;
-    const buttonWidth = isMobile ? width * 0.6 : 200;
-    const buttonHeight = isMobile ? 80 : 80;
-
-    this.enhanceButton.setPosition(centerX, buttonY);
-    this.enhanceButton.setSize(buttonWidth, buttonHeight);
-
-    // Enhance Text (Top inside button)
-    this.enhanceText.setPosition(centerX, buttonY - 15);
-    this.enhanceText.setFontSize(isMobile ? '24px' : '28px');
-
-    // Cost Text (Bottom inside button)
-    this.costText.setPosition(centerX, buttonY + 15);
-    this.costText.setFontSize(isMobile ? '16px' : '18px');
-    this.costText.setColor('#ffcccc');
-    this.costText.setStroke('#000', 2);
-
-    // Check if enhanceText exists (it was created via add.text but not assigned to property in previous code, need to fix that if we want to move it. 
-    // Wait, the previous code didn't assign separate vars for texts inside button. 
-    // I should probably start finding them or just recreate them cleanly.
-    // For now, I'll assume I need to manage them. 
-    // Let's rely on finding them by name if possible or better, store them in class props.
-    // Since I'm replacing a big chunk, I'll upgrade the class props to store text too.
   }
 
-  // Need to update class properties to store texts for resizing
-  // ...
-
-
-  private async handleEnhance() {
+  // Public methods triggered by React
+  public async enhance() {
+    // Prevent double clicking or action when input disabled
     if (!this.input.enabled) return;
 
     // Visual Feedback: Hammer Animation
     this.playHammerAnimation();
-    this.costText.setVisible(false); // Hide cost during animation
 
+    // Temporarily disable further input logic if needed, 
+    // though React side should likely handle disable state too.
     this.input.enabled = false;
 
     if (this.onStatusChange) this.onStatusChange('제작 중...', 'NORMAL');
@@ -253,7 +168,6 @@ export class MainScene extends Phaser.Scene {
       this.time.delayedCall(800, () => {
         this.handleResult(result, newLevel, message);
         this.input.enabled = true;
-        this.costText.setVisible(true); // Show cost again
         this.updateUserInfo(); // Refresh gold
       });
 
@@ -266,17 +180,23 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private async handleSell() {
-    if (this.currentLevel <= 0) return;
-    if (!this.input.enabled) return;
+  public async sell() {
+    // This might not be needed if React handles the UI directly, 
+    // but we might want to keep some Phaser state logic here.
+    // Actually, standardizing: React calls this to trigger any visual effect if needed?
+    // Or just use React to call API and update Phaser via callback?
+    // Let's keep the actual API call in React for Sell since it involves a Modal.
+    // But if we want to trigger sword disappearing animation, we need a method.
 
-    // Delegate to React if callback exists
-    if (this.onSellRequest) {
-      this.onSellRequest();
-      return;
-    }
+    // For now, let's just use this method to trigger an effect if we sold it.
+    // React -> Sell Modal -> API Success -> Phaser.onSellComplete()
+  }
 
-    console.warn('onSellRequest callback not set');
+  // Called when sell is confirmed in React
+  public onSellComplete() {
+    // Play sell sound or effect?
+    this.successEmitter.explode(50, this.sword.x, this.sword.y);
+    this.resetLevel();
   }
 
   private async updateUserInfo() {
@@ -292,7 +212,16 @@ export class MainScene extends Phaser.Scene {
 
   private playHammerAnimation() {
     this.hammer.setVisible(true);
-    this.hammer.setPosition(this.width / 2 + 80, this.height / 2 - 20);
+    // Position is set in resize, but good to ensure
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const isMobile = width < 768;
+    const centerY = height / 2;
+    const anvilY = centerY + (isMobile ? 50 : 100);
+    const hammerX = (width / 2) + (isMobile ? 50 : 80);
+    const hammerY = anvilY - (isMobile ? 60 : 120);
+
+    this.hammer.setPosition(hammerX, hammerY);
     this.hammer.setAngle(45);
 
     this.tweens.add({
@@ -327,9 +256,6 @@ export class MainScene extends Phaser.Scene {
 
     if (this.onStatusChange) this.onStatusChange(message, type);
     if (this.onLevelChange) this.onLevelChange(this.currentLevel);
-
-    this.updateCostText(); // Update cost after level change
-    this.updateSellButtonVisibility(); // Check visibility
 
     this.updateSwordSprite();
 
@@ -376,25 +302,6 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  // Helper/Visual Logic
-  private updateCostText() {
-    // Cost = Base(100) * (Level + 1)^2
-    const cost = this.itemBaseValue * Math.pow(this.currentLevel + 1, 2);
-    this.costText.setText(`비용: ${cost.toLocaleString()} G`);
-  }
-
-  private updateSellButtonVisibility() {
-    const canSell = this.currentLevel > 0;
-    this.sellButton.setVisible(canSell);
-    this.sellText.setVisible(canSell);
-
-    if (canSell) {
-      this.sellButton.setInteractive();
-    } else {
-      this.sellButton.disableInteractive();
-    }
-  }
-
   // Getter helper properties due to scope issues in callbacks
   get width() { return this.scale.width; }
   get height() { return this.scale.height; }
@@ -404,8 +311,6 @@ export class MainScene extends Phaser.Scene {
 
     // Reset visual
     this.updateSwordSprite();
-    this.updateCostText(); // Reset cost display
-    this.updateSellButtonVisibility(); // Hide button
 
     if (this.onLevelChange) {
       this.onLevelChange(this.currentLevel);
