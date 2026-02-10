@@ -95,6 +95,7 @@ const Game: React.FC = () => {
         statusMessage={statusMessage}
         statusType={statusType}
         onOpenProbability={() => openModal(setIsProbabilityOpen)}
+        onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
       />
 
       {/* Phaser Game Layer */}
@@ -109,43 +110,32 @@ const Game: React.FC = () => {
 
       {/* UI Overlay Wrappers (Modals & Menus) */}
 
-      {/* Top Menu Button & Dropdown */}
-      <div className="absolute top-4 right-4 z-50">
-        {/* Contracts are also on the right, but lower. Menu is top-right corner. */}
-        <div className="relative">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 border-2 border-gray-600 shadow-lg transition-transform active:scale-95"
-          >
-            <Menu size={24} />
-          </button>
-
-          {/* Dropdown Menu */}
-          {isMenuOpen && (
-            <div className="absolute right-0 top-12 w-48 bg-gray-900 border-2 border-gray-600 rounded-lg shadow-xl overflow-hidden animate-fade-in-down flex flex-col z-50">
-              <button onClick={() => openModal(setIsContractOfficeOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
-                <ScrollText size={20} className="text-orange-400" />
-                <span className="font-bold text-sm">의뢰소</span>
-              </button>
-              <button onClick={() => openModal(setIsRankingOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
-                <Trophy size={20} className="text-yellow-400" />
-                <span className="font-bold text-sm">랭킹</span>
-              </button>
-              <button onClick={() => openModal(setIsInventoryOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
-                <Package size={20} />
-                <span className="font-bold text-sm">가방</span>
-              </button>
-              <button onClick={() => openModal(setIsRelicOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
-                <Gem size={20} className="text-cyan-400" />
-                <span className="font-bold text-sm">유물</span>
-              </button>
-              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-900/30 transition-colors text-left">
-                <LogOut size={20} />
-                <span className="font-bold text-sm">로그아웃</span>
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Dropdown Menu (Positioned relative to Top Right of HUD) */}
+      <div className="absolute top-16 right-4 z-50">
+        {isMenuOpen && (
+          <div className="w-48 bg-gray-900 border-2 border-gray-600 rounded-lg shadow-xl overflow-hidden animate-fade-in-down flex flex-col z-50">
+            <button onClick={() => openModal(setIsContractOfficeOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
+              <ScrollText size={20} className="text-orange-400" />
+              <span className="font-bold text-sm">의뢰소</span>
+            </button>
+            <button onClick={() => openModal(setIsRankingOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
+              <Trophy size={20} className="text-yellow-400" />
+              <span className="font-bold text-sm">랭킹</span>
+            </button>
+            <button onClick={() => openModal(setIsInventoryOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
+              <Package size={20} />
+              <span className="font-bold text-sm">가방</span>
+            </button>
+            <button onClick={() => openModal(setIsRelicOpen)} className="flex items-center gap-3 px-4 py-3 text-white hover:bg-gray-800 border-b border-gray-700 transition-colors text-left">
+              <Gem size={20} className="text-cyan-400" />
+              <span className="font-bold text-sm">유물</span>
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-900/30 transition-colors text-left">
+              <LogOut size={20} />
+              <span className="font-bold text-sm">로그아웃</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Active Contracts Widget (Right Side) */}
