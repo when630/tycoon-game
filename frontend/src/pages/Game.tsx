@@ -65,6 +65,19 @@ const Game: React.FC = () => {
     navigate('/');
   };
 
+  const handleAddGold = async () => {
+    try {
+      await client.post('/api/v1/user/test/gold');
+      await fetchUserData();
+      setStatusMessage("테스트 자금 10,000G 지급 완료!");
+      setStatusType("SUCCESS");
+    } catch (e) {
+      console.error("Failed to add test gold", e);
+      setStatusMessage("자금 지급 실패");
+      setStatusType("FAIL");
+    }
+  };
+
   // Sync handlers
   const handleLevelChange = (newLevel: number) => {
     setCurrentLevel(newLevel);
@@ -96,6 +109,7 @@ const Game: React.FC = () => {
         statusType={statusType}
         onOpenProbability={() => openModal(setIsProbabilityOpen)}
         onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
+        onAddGold={handleAddGold}
       />
 
       {/* Phaser Game Layer */}

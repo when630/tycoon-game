@@ -9,6 +9,7 @@ interface GameHUDProps {
   statusType: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY';
   onOpenProbability: () => void;
   onToggleMenu: () => void;
+  onAddGold?: () => void;
 }
 
 const GameHUD: React.FC<GameHUDProps> = ({
@@ -18,7 +19,8 @@ const GameHUD: React.FC<GameHUDProps> = ({
   statusMessage,
   statusType,
   onOpenProbability,
-  onToggleMenu
+  onToggleMenu,
+  onAddGold
 }) => {
   const [animateGold, setAnimateGold] = useState(false);
 
@@ -102,6 +104,15 @@ const GameHUD: React.FC<GameHUDProps> = ({
             <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-700 flex items-center justify-center shadow-lg border border-yellow-300">
               <Coins size={14} className="text-yellow-900 md:w-4 md:h-4" />
             </div>
+            {onAddGold && (
+              <button
+                onClick={onAddGold}
+                className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-green-600 hover:bg-green-500 text-white flex items-center justify-center border border-green-400 shadow-md active:scale-90 transition-transform"
+                title="Add 10,000 Gold (Test)"
+              >
+                <span className="text-sm font-bold mb-0.5">+</span>
+              </button>
+            )}
           </div>
 
           {/* Menu Button */}
