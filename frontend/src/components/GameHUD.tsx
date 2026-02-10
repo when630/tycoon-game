@@ -43,10 +43,10 @@ const GameHUD: React.FC<GameHUDProps> = ({
     <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 flex flex-col justify-between font-sans">
 
       {/* Top Bar - Continuous Bar */}
-      <div className="w-full h-16 bg-black/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 md:px-6 pointer-events-auto shadow-xl z-20">
+      <div className="w-full h-14 md:h-16 bg-black/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-2 md:px-6 pointer-events-auto shadow-xl z-20">
 
         {/* Left: Level & Probability */}
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-2 md:gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-900/50 border border-blue-500 flex items-center justify-center relative">
               <Sword size={16} className="text-blue-400 md:w-5 md:h-5" />
@@ -79,9 +79,9 @@ const GameHUD: React.FC<GameHUDProps> = ({
         </div>
 
         {/* Right: Gold, Reputation & Menu */}
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-1.5 md:gap-6">
           {/* Reputation */}
-          <div className="flex items-center gap-2 md:gap-3 bg-gray-900/50 px-2.5 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-600/30">
+          <div className="flex items-center gap-1.5 md:gap-3 bg-gray-900/50 px-2 py-1 md:px-4 md:py-1.5 rounded-full border border-purple-600/30">
             <div className="flex flex-col items-end">
               <span className="text-[9px] text-purple-400 font-bold tracking-wider hidden md:block">REPUTATION</span>
               <span className="text-sm md:text-lg font-mono font-bold text-purple-200">
@@ -94,7 +94,7 @@ const GameHUD: React.FC<GameHUDProps> = ({
           </div>
 
           {/* Gold */}
-          <div className="flex items-center gap-2 md:gap-3 bg-gray-900/50 px-2.5 py-1 md:px-4 md:py-1.5 rounded-full border border-yellow-600/30">
+          <div className="flex items-center gap-1.5 md:gap-3 bg-gray-900/50 px-2 py-1 md:px-4 md:py-1.5 rounded-full border border-yellow-600/30">
             <div className="flex flex-col items-end">
               <span className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider hidden md:block">Gold</span>
               <span className={`text-sm md:text-lg font-mono font-bold text-yellow-100 transition-all ${animateGold ? 'text-yellow-300 scale-105' : ''}`}>
