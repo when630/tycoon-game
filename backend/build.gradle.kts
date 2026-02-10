@@ -1,7 +1,7 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.5.10"
-	id("io.spring.dependency-management") version "1.1.7"
+	id("org.springframework.boot") version "3.2.2"
+	id("io.spring.dependency-management") version "1.1.4"
 }
 
 group = "com.tycoon"
@@ -10,7 +10,7 @@ description = "Forge Tycoon Game"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 

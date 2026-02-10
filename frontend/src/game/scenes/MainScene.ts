@@ -50,10 +50,11 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
-    this.load.spritesheet('sword', '/assets/sword_sheet.png', {
-      frameWidth: 256,
-      frameHeight: 1024
-    });
+    // Load individual sword images (0 to 21)
+    for (let i = 0; i <= 21; i++) {
+      const paddedIndex = i.toString().padStart(2, '0');
+      this.load.image(`sword_${i}`, `/assets/sword/sword_${paddedIndex}.png`);
+    }
   }
 
   create() {
@@ -69,7 +70,7 @@ export class MainScene extends Phaser.Scene {
     this.anvil.setScale(0.5);
 
     // 3. Sword 
-    this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword', 0);
+    this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword_0');
     this.sword.setScale(0.35);
     this.sword.setOrigin(0.5, 1);
 
@@ -291,15 +292,10 @@ export class MainScene extends Phaser.Scene {
 
   private updateSwordSprite() {
     // Change frame based on level
-    if (this.currentLevel === 0) {
-      this.sword.setFrame(0); // Rusty/Basic
-    } else if (this.currentLevel <= 5) {
-      this.sword.setFrame(1); // Clean
-    } else if (this.currentLevel <= 10) {
-      this.sword.setFrame(2); // Magic
-    } else {
-      this.sword.setFrame(3); // Legendary
-    }
+    // Change texture based on level
+    // Cap at level 21 because we only have images up to sword_21
+    const safeLevel = Math.min(this.currentLevel, 21);
+    this.sword.setTexture(`sword_${safeLevel}`);
   }
 
   // Getter helper properties due to scope issues in callbacks

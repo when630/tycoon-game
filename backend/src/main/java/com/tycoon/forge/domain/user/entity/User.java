@@ -2,16 +2,16 @@ package com.tycoon.forge.domain.user.entity;
 
 import com.tycoon.forge.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigInteger;
 import java.util.UUID;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "users")
 public class User extends BaseTimeEntity {
@@ -23,14 +23,17 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 50)
     private String nickname;
 
+    @Builder.Default
     @Column(nullable = false)
-    private BigInteger gold;
+    private BigInteger gold = BigInteger.valueOf(10000);
 
+    @Builder.Default
     @Column(nullable = false)
-    private int reputation;
+    private int reputation = 0;
 
+    @Builder.Default
     @Column(name = "highest_level", nullable = false)
-    private int highestLevel;
+    private int highestLevel = 0;
 
     @Column(length = 20)
     private String provider; // KAKAO, GOOGLE, etc.
@@ -38,27 +41,17 @@ public class User extends BaseTimeEntity {
     @Column(name = "provider_id")
     private String providerId;
 
-    @Builder
-    public User(String nickname, String provider, String providerId) {
-        this.nickname = nickname;
-        this.gold = BigInteger.valueOf(10000);
-        this.reputation = 0;
-        this.highestLevel = 0;
-        this.provider = provider;
-        this.providerId = providerId;
-    }
-
     public void updateGold(BigInteger amount) {
         this.gold = amount;
     }
-    
+
     public void addGold(BigInteger amount) {
         this.gold = this.gold.add(amount);
     }
-    
+
     public void subtractGold(BigInteger amount) {
-       // TODO: Check for negative balance if needed
-       this.gold = this.gold.subtract(amount);
+        // TODO: Check for negative balance if needed
+        this.gold = this.gold.subtract(amount);
     }
 
     public void updateReputation(int amount) {
@@ -68,7 +61,7 @@ public class User extends BaseTimeEntity {
     public void decreaseReputation(int amount) {
         this.reputation -= amount;
     }
-    
+
     public void updateHighestLevel(int level) {
         if (level > this.highestLevel) {
             this.highestLevel = level;

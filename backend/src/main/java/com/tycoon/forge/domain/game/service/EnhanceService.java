@@ -21,9 +21,13 @@ public class EnhanceService {
 
     @org.springframework.beans.factory.annotation.Autowired
     public EnhanceService(UserRepository userRepository, com.tycoon.forge.domain.relic.service.RelicService relicService) {
+        this(userRepository, relicService, new Random());
+    }
+
+    public EnhanceService(UserRepository userRepository, com.tycoon.forge.domain.relic.service.RelicService relicService, Random random) {
         this.userRepository = userRepository;
         this.relicService = relicService;
-        this.random = new Random();
+        this.random = random;
     }
 
     @Transactional
