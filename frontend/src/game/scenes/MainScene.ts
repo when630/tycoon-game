@@ -129,7 +129,7 @@ export class MainScene extends Phaser.Scene {
     // 2. Anvil
     const anvilY = centerY + (isMobile ? 50 : 100);
     this.anvil.setPosition(centerX, anvilY);
-    this.anvil.setScale(isMobile ? 0.35 : 0.5);
+    this.anvil.setScale(isMobile ? 0.25 : 0.5);
 
     // 3. Sword
     const swordY = anvilY - (isMobile ? 20 : 40); // Slightly above anvil center
