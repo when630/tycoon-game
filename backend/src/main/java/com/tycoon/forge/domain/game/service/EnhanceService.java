@@ -178,41 +178,51 @@ public class EnhanceService {
                 .build();
     }
 
-    public EnhanceDto.ProbabilityResponse getProbabilities(int currentLevel) {
-        double successRate;
-        double destroyRate;
+    public EnhanceDto.ProbabilityResponse getProbabilities(UUID userId, int currentLevel) {
+        double baseSuccessRate;
+        double baseDestroyRate;
 
         if (currentLevel < 5) {
-            successRate = 0.99 - (currentLevel * 0.01);
-            destroyRate = 0.0;
+            baseSuccessRate = 0.99 - (currentLevel * 0.01);
+            baseDestroyRate = 0.0;
         } else if (currentLevel < 10) {
-            successRate = 0.75 - ((currentLevel - 5) * 0.05);
-            destroyRate = 0.0;
+            baseSuccessRate = 0.75 - ((currentLevel - 5) * 0.05);
+            baseDestroyRate = 0.0;
         } else if (currentLevel < 15) {
-            successRate = 0.45 - ((currentLevel - 10) * 0.05);
-            destroyRate = 0.01;
+            baseSuccessRate = 0.45 - ((currentLevel - 10) * 0.05);
+            baseDestroyRate = 0.01;
         } else {
-            successRate = 0.10;
-            destroyRate = 0.20 + ((currentLevel - 15) * 0.05);
+            baseSuccessRate = 0.10;
+            baseDestroyRate = 0.20 + ((currentLevel - 15) * 0.05);
         }
 
-        // Base fail rate assuming no relics for display (Frontend might not know relics
-        // easily yet)
-        // Or we could pass userId to calculate relics. For now let's show BASE
-        // probabilities.
-        // Ideally should include relics but let's stick to base for now as requested
-        // "Probability display".
-        // Actually, user would want to see their ACTUAL probability.
-        // Let's modify signature to accept UUID if possible, but controller might just
-        // pass level.
-        // Let's stick to base logic for the HUD '?' button for now to keep it simple,
-        // OR changing it to contextual.
-        // Let's return the BASE rates. Relics are hidden bonuses.
+        // Relic Effect: GOLDEN_HAMMER (Success Rate +)
+        double relicSuccessBonus = relicService.getEffectMultiplier(userId,
+                com.tycoon.forge.domain.relic.entity.RelicType.GOLDEN_HAMMER);
+        double finalSuccessRate = baseSuccessRate + relicSuccessBonus;
 
-        double failRate = 1.0 - successRate - destroyRate;
-        if (failRate < 0)
-            failRate = 0;
+        // Relic Effect: LUCKY_CLOVER (Destroy Rate -)
+        double relicDestroyReduction = 0.0;
+        double finalDestroyRate = baseDestroyRate;
 
-        return new EnhanceDto.ProbabilityResponse(successRate, failRate, destroyRate);
+        if (baseDestroyRate > 0) {
+            relicDestroyReduction = relicService.getEffectMultiplier(userId,
+                    com.tycoon.forge.domain.relic.entity.RelicType.LUCKY_CLOVER);
+            finalDestroyRate = Math.max(0, baseDestroyRate - relicDestroyReduction);
+        }
+
+        double finalFailRate = 1.0 - finalSuccessRate - finalDestroyRate;
+        if (finalFailRate < 0)
+            finalFailRate = 0;
+
+        return EnhanceDto.ProbabilityResponse.builder()
+                .successRate(finalSuccessRate)
+                .baseSuccessRate(baseSuccessRate)
+                .relicSuccessBonus(relicSuccessBonus)
+                .destroyRate(finalDestroyRate)
+                .baseDestroyRate(baseDestroyRate)
+                .relicDestroyReduction(relicDestroyReduction)
+                .failRate(finalFailRate)
+                .build();
     }
 }

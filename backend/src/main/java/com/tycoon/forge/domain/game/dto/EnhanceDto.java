@@ -36,9 +36,16 @@ public class EnhanceDto {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @Builder
     public static class ProbabilityResponse {
         private double successRate;
+        private double baseSuccessRate;
+        private double relicSuccessBonus;
+
         private double failRate;
+
         private double destroyRate;
+        private double baseDestroyRate;
+        private double relicDestroyReduction;
     }
 }

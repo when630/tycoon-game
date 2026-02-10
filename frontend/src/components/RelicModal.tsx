@@ -101,7 +101,10 @@ const RelicModal: React.FC<RelicModalProps> = ({ isOpen, onClose }: RelicModalPr
                 <img
                   src={chestState === 'CLOSED' ? '/assets/relic_chest_closed.png' : '/assets/relic_chest_open.png'}
                   alt="Chest"
-                  className={`w-full h-full object-contain pixelated drop-shadow-2xl ${loading && chestState === 'CLOSED' ? 'animate-bounce' : ''}`}
+                  className={`w-full h-full object-contain pixelated drop-shadow-2xl 
+                        ${loading && chestState === 'CLOSED' ? 'animate-bounce' : ''}
+                        ${chestState === 'CLOSED' ? 'scale-75' : 'scale-x-[-1]'}
+                    `}
                 />
               </div>
             </div>

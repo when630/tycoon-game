@@ -24,8 +24,17 @@ public class EnhanceController {
     public ResponseEntity<EnhanceDto.Response> enhance(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody EnhanceDto.Request request) {
-        
+
         UUID userId = UUID.fromString(userDetails.getUsername());
         return ResponseEntity.ok(enhanceService.enhance(userId, request));
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/probabilities")
+    public ResponseEntity<EnhanceDto.ProbabilityResponse> getProbabilities(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @org.springframework.web.bind.annotation.RequestParam int currentLevel) {
+
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        return ResponseEntity.ok(enhanceService.getProbabilities(userId, currentLevel));
     }
 }

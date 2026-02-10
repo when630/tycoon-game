@@ -10,8 +10,14 @@ interface ProbabilityModalProps {
 
 interface ProbabilityData {
   successRate: number;
+  baseSuccessRate: number;
+  relicSuccessBonus: number;
+
   failRate: number;
+
   destroyRate: number;
+  baseDestroyRate: number;
+  relicDestroyReduction: number;
 }
 
 const ProbabilityModal: React.FC<ProbabilityModalProps> = ({ isOpen, onClose, currentLevel }) => {
@@ -27,7 +33,7 @@ const ProbabilityModal: React.FC<ProbabilityModalProps> = ({ isOpen, onClose, cu
   const fetchProbability = async () => {
     setLoading(true);
     try {
-      const res = await client.get(`/api/v1/game/probability?level=${currentLevel}`);
+      const res = await client.get(`/api/v1/game/probabilities?currentLevel=${currentLevel}`);
       setData(res.data);
     } catch (e) {
       console.error(e);
@@ -46,7 +52,7 @@ const ProbabilityModal: React.FC<ProbabilityModalProps> = ({ isOpen, onClose, cu
         <div className="flex justify-between items-center p-4 bg-gray-800 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <AlertCircle size={20} className="text-blue-400" />
-            강화 확률 정보 (Lv.{currentLevel} → Lv.{currentLevel + 1})
+            <span className="text-sm md:text-base">강화 확률 정보 (Lv.{currentLevel} → Lv.{currentLevel + 1})</span>
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={24} />
@@ -54,31 +60,51 @@ const ProbabilityModal: React.FC<ProbabilityModalProps> = ({ isOpen, onClose, cu
         </div>
 
         {/* Body */}
-        <div className="p-6 text-center space-y-4">
+        <div className="p-6 space-y-4">
           {loading ? (
-            <p className="text-gray-400 animate-pulse">데이터 불러오는 중...</p>
+            <p className="text-gray-400 animate-pulse text-center">데이터 불러오는 중...</p>
           ) : data ? (
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-800 p-3 rounded border border-gray-700">
-                <div className="text-green-400 font-bold text-lg">{(data.successRate * 100).toFixed(0)}%</div>
-                <div className="text-xs text-gray-400">성공</div>
+            <div className="space-y-4">
+              {/* Success Rate */}
+              <div className="bg-gray-800/50 p-3 rounded border border-green-900/50">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-green-400 font-bold">성공 확률</span>
+                  <span className="text-2xl font-black text-green-400">{(data.successRate * 100).toFixed(1)}%</span>
+                </div>
+                {data.relicSuccessBonus > 0 && (
+                  <div className="text-xs text-right text-green-600/70 border-t border-green-900/30 pt-1">
+                    기본 {(data.baseSuccessRate * 100).toFixed(1)}% + 유물 <span className="font-bold">{(data.relicSuccessBonus * 100).toFixed(1)}%</span>
+                  </div>
+                )}
               </div>
-              <div className="bg-gray-800 p-3 rounded border border-gray-700">
-                <div className="text-orange-400 font-bold text-lg">{(data.failRate * 100).toFixed(0)}%</div>
-                <div className="text-xs text-gray-400">실패</div>
+
+              {/* Fail Rate */}
+              <div className="bg-gray-800/50 p-3 rounded border border-orange-900/50">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-orange-400 font-bold">실패 확률</span>
+                  <span className="text-xl font-bold text-orange-400">{(data.failRate * 100).toFixed(1)}%</span>
+                </div>
               </div>
-              <div className="bg-gray-800 p-3 rounded border border-gray-700">
-                <div className="text-red-500 font-bold text-lg">{(data.destroyRate * 100).toFixed(0)}%</div>
-                <div className="text-xs text-gray-400">파괴</div>
+
+              {/* Destroy Rate */}
+              <div className="bg-gray-800/50 p-3 rounded border border-red-900/50">
+                <div className="flex justify-between items-end mb-1">
+                  <span className="text-red-500 font-bold">파괴 확률</span>
+                  <span className="text-xl font-bold text-red-500">{(data.destroyRate * 100).toFixed(1)}%</span>
+                </div>
+                {data.relicDestroyReduction > 0 && (
+                  <div className="text-xs text-right text-red-600/70 border-t border-red-900/30 pt-1">
+                    기본 {(data.baseDestroyRate * 100).toFixed(1)}% - 유물 <span className="font-bold">{(data.relicDestroyReduction * 100).toFixed(1)}%</span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <p className="text-red-400">정보를 불러올 수 없습니다.</p>
+            <p className="text-red-400 text-center">정보를 불러올 수 없습니다.</p>
           )}
 
-          <div className="text-xs text-gray-500 mt-4 text-left bg-black/20 p-2 rounded">
-            <p>* 유물 효과 미적용 기본 확률입니다.</p>
-            <p>* 실제 확률은 보유 유물에 따라 달라질 수 있습니다.</p>
+          <div className="text-xs text-gray-500 mt-4 text-center">
+            <p>* 현재 보유 중인 유물 효과가 반영된 확률입니다.</p>
           </div>
         </div>
 
