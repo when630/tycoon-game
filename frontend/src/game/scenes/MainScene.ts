@@ -172,8 +172,7 @@ export class MainScene extends Phaser.Scene {
     // Responsive Scale Factors
     // Base design usually 1920x1080 or mobile 375x812 used for reference
     const isMobile = width < 768;
-    const scaleFactor = isMobile ? Math.min(width / 400, height / 800) : Math.min(width / 1200, height / 900);
-    const textScale = Math.max(scaleFactor, 0.7);
+
 
     // 1. Background
     this.background.setPosition(centerX, centerY);
