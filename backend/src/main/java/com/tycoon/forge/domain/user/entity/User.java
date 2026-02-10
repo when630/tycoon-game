@@ -35,6 +35,10 @@ public class User extends BaseTimeEntity {
     @Column(name = "highest_level", nullable = false)
     private int highestLevel = 0;
 
+    @Builder.Default
+    @Column(name = "current_item_level", nullable = false)
+    private int currentItemLevel = 0;
+
     @Column(length = 20)
     private String provider; // KAKAO, GOOGLE, etc.
 
@@ -66,5 +70,9 @@ public class User extends BaseTimeEntity {
         if (level > this.highestLevel) {
             this.highestLevel = level;
         }
+    }
+
+    public void updateCurrentItemLevel(int level) {
+        this.currentItemLevel = level;
     }
 }

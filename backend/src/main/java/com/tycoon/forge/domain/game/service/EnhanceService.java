@@ -20,11 +20,13 @@ public class EnhanceService {
     private final Random random;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public EnhanceService(UserRepository userRepository, com.tycoon.forge.domain.relic.service.RelicService relicService) {
+    public EnhanceService(UserRepository userRepository,
+            com.tycoon.forge.domain.relic.service.RelicService relicService) {
         this(userRepository, relicService, new Random());
     }
 
-    public EnhanceService(UserRepository userRepository, com.tycoon.forge.domain.relic.service.RelicService relicService, Random random) {
+    public EnhanceService(UserRepository userRepository,
+            com.tycoon.forge.domain.relic.service.RelicService relicService, Random random) {
         this.userRepository = userRepository;
         this.relicService = relicService;
         this.random = random;
@@ -35,14 +37,25 @@ public class EnhanceService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        int currentLevel = request.getCurrentLevel();
+        // Use server-side state for level
+        int currentLevel = user.getCurrentItemLevel();
+
+        // Optional: Validate request level matches server level (to prevent
+        // desync/cheating)
+        if (request.getCurrentLevel() != currentLevel) {
+            // For now, just log or warn, but let's trust server state.
+            // Or throw exception to force client refresh.
+            // throw new IllegalArgumentException("Client level mismatch. Please refresh.");
+        }
+
         BigInteger itemBaseValue = request.getItemBaseValue();
 
         // 1. Calculate Enhance Cost: Base * (Level + 1)^2
         long costVal = itemBaseValue.longValue() * (long) Math.pow(currentLevel + 1, 2);
-        
+
         // Relic Effect: ANCIENT_ANVIL (Cost Reduction)
-        double costReduction = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.ANCIENT_ANVIL);
+        double costReduction = relicService.getEffectMultiplier(userId,
+                com.tycoon.forge.domain.relic.entity.RelicType.ANCIENT_ANVIL);
         long reducedCostVal = (long) (costVal * (1.0 - costReduction));
         BigInteger enhanceCost = BigInteger.valueOf(reducedCostVal);
 
@@ -56,43 +69,45 @@ public class EnhanceService {
         // 2. Probability Logic
         double successRate;
         double destroyRate;
-        
+
         if (currentLevel < 5) { // 0, 1, 2, 3, 4 -> +1 ~ +5
             // Safe Zone: 99% -> 95% (Decay 1% per level)
-            successRate = 0.99 - (currentLevel * 0.01); 
+            successRate = 0.99 - (currentLevel * 0.01);
             destroyRate = 0.0;
         } else if (currentLevel < 10) { // 5, 6, 7, 8, 9 -> +6 ~ +10
             // Mid Zone : 75% -> 55% (Decay 5% per level)
             // Lv 5: 0.75 - (0 * 0.05) = 0.75
             // Lv 9: 0.75 - (4 * 0.05) = 0.55
-            successRate = 0.75 - ((currentLevel - 5) * 0.05); 
-            destroyRate = 0.0; 
+            successRate = 0.75 - ((currentLevel - 5) * 0.05);
+            destroyRate = 0.0;
         } else if (currentLevel < 15) { // 10 ~ 14 -> +11 ~ +15
             // High Risk Zone: 45% -> 25% (Decay 5% per level)
             // Lv 10: 0.45 - (0 * 0.05) = 0.45
             // Lv 14: 0.45 - (4 * 0.05) = 0.25
-            successRate = 0.45 - ((currentLevel - 10) * 0.05); 
+            successRate = 0.45 - ((currentLevel - 10) * 0.05);
             destroyRate = 0.01; // Fixed 1% destroy
         } else { // 15+ -> +16 ~
             // Hell Zone (Existing Logic)
             successRate = 0.10;
-            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); 
+            destroyRate = 0.20 + ((currentLevel - 15) * 0.05);
         }
-        
+
         // Relic Effect: GOLDEN_HAMMER (Success Rate +)
-        double successBonus = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.GOLDEN_HAMMER);
+        double successBonus = relicService.getEffectMultiplier(userId,
+                com.tycoon.forge.domain.relic.entity.RelicType.GOLDEN_HAMMER);
         successRate += successBonus;
-        
+
         // Relic Effect: LUCKY_CLOVER (Destroy Rate -)
         if (destroyRate > 0) {
-            double destroyReduction = relicService.getEffectMultiplier(userId, com.tycoon.forge.domain.relic.entity.RelicType.LUCKY_CLOVER);
+            double destroyReduction = relicService.getEffectMultiplier(userId,
+                    com.tycoon.forge.domain.relic.entity.RelicType.LUCKY_CLOVER);
             destroyRate = Math.max(0, destroyRate - destroyReduction);
         }
-        
+
         // 3. Roll
         double roll = random.nextDouble();
         EnhanceDto.Result result;
-        
+
         if (roll < successRate) {
             result = EnhanceDto.Result.SUCCESS;
         } else if (roll < successRate + destroyRate) {
@@ -106,47 +121,52 @@ public class EnhanceService {
         BigInteger goldChange = enhanceCost.negate(); // Start with cost deduction
         int reputationChange = 0;
         String message = "";
-        
+
         switch (result) {
             case SUCCESS:
                 newLevel = currentLevel + 1;
                 user.updateHighestLevel(newLevel);
-                
-                // No immediate gold reward for enhancing, only cost. 
+                user.updateCurrentItemLevel(newLevel);
+
+                // No immediate gold reward for enhancing, only cost.
                 // Money is made via Contracts.
-                
-                reputationChange = 5 + newLevel; 
+
+                reputationChange = 5 + newLevel;
                 user.updateReputation(reputationChange);
-                
+
                 message = "강화 성공!";
                 break;
-                
+
             case FAIL:
                 if (currentLevel >= 10) {
-                     newLevel = Math.max(0, currentLevel - 1);
-                     message = "강화 실패... 등급 하락";
+                    newLevel = Math.max(0, currentLevel - 1);
+                    message = "강화 실패... 등급 하락";
                 } else if (currentLevel >= 5) {
-                     // Requested: 5~9 Maintain on fail
-                     newLevel = currentLevel;
-                     message = "강화 실패... (등급 유지)";
+                    // Requested: 5~9 Maintain on fail
+                    newLevel = currentLevel;
+                    message = "강화 실패... (등급 유지)";
                 } else {
-                     // Safe zone fail -> No drop (technically impossible with 99% logic usually, but keep safe)
-                     newLevel = currentLevel; 
-                     message = "강화 실패...";
+                    // Safe zone fail -> No drop
+                    newLevel = currentLevel;
+                    message = "강화 실패...";
                 }
+                user.updateCurrentItemLevel(newLevel);
+
                 reputationChange = -2;
                 user.decreaseReputation(2);
                 break;
-                
+
             case DESTROY:
                 newLevel = 0; // Item gone
+                user.updateCurrentItemLevel(0);
+
                 reputationChange = -50;
                 user.decreaseReputation(50);
-                
+
                 message = "아이템 파괴!! 처음부터 다시 시작...";
                 break;
         }
-        
+
         userRepository.save(user);
 
         return EnhanceDto.Response.builder()
@@ -162,31 +182,36 @@ public class EnhanceService {
         double successRate;
         double destroyRate;
 
-        if (currentLevel < 5) { 
-            successRate = 0.99 - (currentLevel * 0.01); 
+        if (currentLevel < 5) {
+            successRate = 0.99 - (currentLevel * 0.01);
             destroyRate = 0.0;
-        } else if (currentLevel < 10) { 
-            successRate = 0.75 - ((currentLevel - 5) * 0.05); 
-            destroyRate = 0.0; 
-        } else if (currentLevel < 15) { 
-            successRate = 0.45 - ((currentLevel - 10) * 0.05); 
-            destroyRate = 0.01; 
-        } else { 
+        } else if (currentLevel < 10) {
+            successRate = 0.75 - ((currentLevel - 5) * 0.05);
+            destroyRate = 0.0;
+        } else if (currentLevel < 15) {
+            successRate = 0.45 - ((currentLevel - 10) * 0.05);
+            destroyRate = 0.01;
+        } else {
             successRate = 0.10;
-            destroyRate = 0.20 + ((currentLevel - 15) * 0.05); 
+            destroyRate = 0.20 + ((currentLevel - 15) * 0.05);
         }
-        
-        // Base fail rate assuming no relics for display (Frontend might not know relics easily yet)
-        // Or we could pass userId to calculate relics. For now let's show BASE probabilities.
-        // Ideally should include relics but let's stick to base for now as requested "Probability display".
-        // Actually, user would want to see their ACTUAL probability. 
-        // Let's modify signature to accept UUID if possible, but controller might just pass level.
-        // Let's stick to base logic for the HUD '?' button for now to keep it simple, 
-        // OR changing it to contextual. 
+
+        // Base fail rate assuming no relics for display (Frontend might not know relics
+        // easily yet)
+        // Or we could pass userId to calculate relics. For now let's show BASE
+        // probabilities.
+        // Ideally should include relics but let's stick to base for now as requested
+        // "Probability display".
+        // Actually, user would want to see their ACTUAL probability.
+        // Let's modify signature to accept UUID if possible, but controller might just
+        // pass level.
+        // Let's stick to base logic for the HUD '?' button for now to keep it simple,
+        // OR changing it to contextual.
         // Let's return the BASE rates. Relics are hidden bonuses.
-        
+
         double failRate = 1.0 - successRate - destroyRate;
-        if (failRate < 0) failRate = 0;
+        if (failRate < 0)
+            failRate = 0;
 
         return new EnhanceDto.ProbabilityResponse(successRate, failRate, destroyRate);
     }

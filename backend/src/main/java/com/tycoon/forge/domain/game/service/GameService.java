@@ -37,11 +37,9 @@ public class GameService {
         BigInteger reward = BigInteger.valueOf(rewardVal);
 
         user.addGold(reward);
-        
-        // No need to "reset" the item in DB if the DB doesn't track item state per se.
-        // The frontend will treat it as reset. 
-        // If we tracked item level in DB, we'd reset it here. 
-        // (Assuming current architecture relies on Frontend state + verification in request)
+
+        // Reset item level after selling
+        user.updateCurrentItemLevel(0);
 
         return reward;
     }

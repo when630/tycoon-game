@@ -57,8 +57,20 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  init(data: { currentLevel: number }) {
+    this.currentLevel = data.currentLevel || 0;
+  }
+
   create() {
     const { width, height } = this.scale;
+
+    // Initialize state from Registry if not set via init (though create runs after init)
+    // Priority: init date > registry > default
+    // Since we aren't using scene.start(data), init data is empty.
+    const registryLevel = this.registry.get('initialLevel');
+    if (registryLevel !== undefined) {
+      this.currentLevel = registryLevel;
+    }
 
     // 1. Background
     this.background = this.add.image(width / 2, height / 2, 'background');
@@ -70,7 +82,9 @@ export class MainScene extends Phaser.Scene {
     this.anvil.setScale(0.5);
 
     // 3. Sword 
-    this.sword = this.add.sprite(width / 2, height / 2 + 60, 'sword_0');
+    // Determine initial sprite based on currentLevel
+    const safeLevel = Math.min(this.currentLevel, 21);
+    this.sword = this.add.sprite(width / 2, height / 2 + 60, `sword_${safeLevel}`);
     this.sword.setScale(0.75); // Increased from 0.5
     this.sword.setOrigin(0.5, 1);
 

@@ -10,12 +10,15 @@ import RelicModal from '../components/RelicModal';
 import InventoryModal from '../components/InventoryModal';
 import ProbabilityModal from '../components/ProbabilityModal';
 import client from '../api/client';
-import { Menu, LogOut, Package, Trophy, Gem, ScrollText } from 'lucide-react';
+import { LogOut, Package, Trophy, Gem, ScrollText } from 'lucide-react';
+
+import LoadingScreen from '../components/LoadingScreen';
 
 const Game: React.FC = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [gold, setGold] = useState(0);
   const [reputation, setReputation] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("제작 준비 완료");
   const [statusType, setStatusType] = useState<'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY'>('NORMAL');
 
@@ -41,8 +44,14 @@ const Game: React.FC = () => {
       const res = await client.get('/api/v1/user/me');
       setGold(res.data.gold);
       setReputation(res.data.reputation);
+      if (res.data.currentItemLevel !== undefined) {
+        setCurrentLevel(res.data.currentItemLevel);
+      }
     } catch (e) {
       console.error("Failed to fetch user data", e);
+    } finally {
+      // Fake delay for smooth loading screen effect (optional)
+      setTimeout(() => setIsLoading(false), 1000);
     }
   };
 
@@ -112,15 +121,21 @@ const Game: React.FC = () => {
         onAddGold={handleAddGold}
       />
 
-      {/* Phaser Game Layer */}
-      <PhaserGame
-        ref={phaserRef}
-        onLevelChange={handleLevelChange}
-        // onSellRequest={handleSellRequest} // Removed
-        onGoldChange={handleGoldChange}
-        onReputationChange={setReputation}
-        onStatusChange={handleStatusChange}
-      />
+      {/* Loading Screen Overlay */}
+      <LoadingScreen isLoading={isLoading} />
+
+      {/* Phaser Game Layer - Only render if not loading to ensure initialLevel is ready */}
+      {!isLoading && (
+        <PhaserGame
+          ref={phaserRef}
+          initialLevel={currentLevel}
+          onLevelChange={handleLevelChange}
+          // onSellRequest={handleSellRequest} // Removed
+          onGoldChange={handleGoldChange}
+          onReputationChange={setReputation}
+          onStatusChange={handleStatusChange}
+        />
+      )}
 
       {/* UI Overlay Wrappers (Modals & Menus) */}
 

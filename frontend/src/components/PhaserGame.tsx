@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import config from '../game/config';
 
 interface PhaserGameProps {
+  initialLevel: number;
   onLevelChange: (level: number) => void;
   // onSellRequest: () => void; // Removed
   onGoldChange: (gold: number) => void;
@@ -16,7 +17,7 @@ export interface PhaserGameRef {
   onSellComplete: () => void;
 }
 
-const PhaserGame = forwardRef<PhaserGameRef, PhaserGameProps>(({ onLevelChange, onGoldChange, onReputationChange, onStatusChange }, ref) => {
+const PhaserGame = forwardRef<PhaserGameRef, PhaserGameProps>(({ initialLevel, onLevelChange, onGoldChange, onReputationChange, onStatusChange }, ref) => {
   const gameRef = useRef<Phaser.Game | null>(null);
 
   useImperativeHandle(ref, () => ({
