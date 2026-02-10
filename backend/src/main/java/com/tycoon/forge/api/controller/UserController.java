@@ -20,6 +20,7 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    @GetMapping("/me")
     public ResponseEntity<User> getMyInfo(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         return ResponseEntity.ok(userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found")));
