@@ -30,13 +30,13 @@ public class GameController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody SellRequest request) {
 
-        BigInteger reward = gameService.sellItem(userPrincipal.getId(), request.getCurrentLevel(), request.getItemBaseValue());
+        BigInteger reward = gameService.sellItem(userPrincipal.getId(), request.getCurrentLevel(),
+                request.getItemBaseValue());
 
         return ResponseEntity.ok(Map.of(
                 "message", "판매 완료! " + reward + " G 획득.",
                 "reward", reward,
-                "goldChange", reward
-        ));
+                "goldChange", reward));
     }
 
     @Data
@@ -44,8 +44,11 @@ public class GameController {
         private int currentLevel;
         private BigInteger itemBaseValue;
     }
+
     @GetMapping("/probability")
-    public ResponseEntity<EnhanceDto.ProbabilityResponse> getProbability(@RequestParam int level) {
-        return ResponseEntity.ok(enhanceService.getProbabilities(level));
+    public ResponseEntity<EnhanceDto.ProbabilityResponse> getProbability(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam int level) {
+        return ResponseEntity.ok(enhanceService.getProbabilities(userPrincipal.getId(), level));
     }
 }
