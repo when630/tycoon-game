@@ -66,7 +66,6 @@ const GameHUD: React.FC<GameHUDProps> = ({
           >
             <HelpCircle size={14} className="md:w-4 md:h-4" />
             <span className="hidden md:inline">확률 정보</span>
-            <span className="md:hidden">확률</span>
           </button>
         </div>
 
