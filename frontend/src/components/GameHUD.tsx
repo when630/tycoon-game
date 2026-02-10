@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Coins, Sword, Trophy, HelpCircle } from 'lucide-react';
+import { Coins, Sword, Trophy, HelpCircle, Menu } from 'lucide-react';
 
 interface GameHUDProps {
   gold: number;
@@ -8,9 +8,18 @@ interface GameHUDProps {
   statusMessage: string;
   statusType: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY';
   onOpenProbability: () => void;
+  onToggleMenu: () => void;
 }
 
-const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statusMessage, statusType, onOpenProbability }) => {
+const GameHUD: React.FC<GameHUDProps> = ({
+  gold,
+  currentLevel,
+  reputation,
+  statusMessage,
+  statusType,
+  onOpenProbability,
+  onToggleMenu
+}) => {
   const [animateGold, setAnimateGold] = useState(false);
 
   useEffect(() => {
@@ -18,80 +27,92 @@ const GameHUD: React.FC<GameHUDProps> = ({ gold, currentLevel, reputation, statu
     const timer = setTimeout(() => setAnimateGold(false), 500);
     return () => clearTimeout(timer);
   }, [gold]);
-  // ... (rest of the code similar to before but careful with matching)
+
   const getStatusColor = () => {
     switch (statusType) {
-      case 'SUCCESS': return 'text-green-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
-      case 'FAIL': return 'text-orange-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
-      case 'DESTROY': return 'text-red-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
-      default: return 'text-yellow-200 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
+      case 'SUCCESS': return 'text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]';
+      case 'FAIL': return 'text-orange-400 drop-shadow-[0_0_10px_rgba(251,146,60,0.5)]';
+      case 'DESTROY': return 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]';
+      default: return 'text-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]';
     }
   };
 
   return (
     <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 flex flex-col justify-between font-sans">
 
-      {/* Top Bar - Single Continuous Bar */}
-      <div className="w-full h-16 bg-black/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 lg:px-8 pointer-events-auto shadow-md">
+      {/* Top Bar - Continuous Bar */}
+      <div className="w-full h-16 bg-black/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 md:px-6 pointer-events-auto shadow-xl z-20">
 
         {/* Left: Level & Probability */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-blue-900/50 border border-blue-500 flex items-center justify-center">
-              <Sword size={20} className="text-blue-400" />
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-900/50 border border-blue-500 flex items-center justify-center relative">
+              <Sword size={16} className="text-blue-400 md:w-5 md:h-5" />
+              <span className="absolute -bottom-1 -right-1 bg-black text-[9px] text-blue-300 border border-blue-700 px-1 rounded-full md:hidden">LV</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-bold tracking-wider">LEVEL</span>
+              <span className="text-[9px] text-gray-400 font-bold tracking-wider hidden md:block">LEVEL</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-white leading-none">+{currentLevel}</span>
-                <span className="text-xs text-blue-400 font-bold">강</span>
+                <span className="text-xl md:text-2xl font-black text-white leading-none">+{currentLevel}</span>
+                <span className="text-[10px] md:text-xs text-blue-400 font-bold">강</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={onOpenProbability}
-            className="flex items-center gap-1.5 bg-gray-800/50 hover:bg-gray-700 text-gray-400 hover:text-white px-3 py-1.5 rounded-full border border-gray-600 transition-all text-xs"
+            className="flex items-center gap-1.5 bg-gray-800/50 hover:bg-gray-700 text-gray-400 hover:text-white px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-gray-600 transition-all text-[10px] md:text-xs"
             title="강화 확률 보기"
           >
-            <HelpCircle size={14} />
-            <span>확률 정보</span>
+            <HelpCircle size={14} className="md:w-4 md:h-4" />
+            <span className="hidden md:inline">확률 정보</span>
+            <span className="md:hidden">확률</span>
           </button>
         </div>
 
-        {/* Center: Status Message (Hidden on small mobile, visible on desktop) */}
-        <div className="absolute left-1/2 top-20 transform -translate-x-1/2 text-center w-full px-4 pointer-events-none md:static md:w-auto md:transform-none md:p-0 md:mt-0">
+        {/* Center: Status Message (Desktop only or very subtle on mobile) */}
+        <div className="absolute left-1/2 top-24 transform -translate-x-1/2 text-center w-full px-4 pointer-events-none md:static md:w-auto md:transform-none md:p-0 md:mt-0">
           <h1 className={`text-2xl md:text-3xl font-black italic tracking-tighter transition-all duration-300 ${getStatusColor()}`}>
             {statusMessage}
           </h1>
         </div>
 
-        {/* Right: Gold & Reputation */}
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex flex-col items-end">
+        {/* Right: Gold, Reputation & Menu */}
+        <div className="flex items-center gap-3 md:gap-6">
+          {/* Reputation (Desktop Only) */}
+          <div className="hidden lg:flex flex-col items-end">
             <span className="text-[10px] text-gray-400 font-bold tracking-wider flex items-center gap-1">
               <Trophy size={10} className="text-purple-400" /> REPUTATION
             </span>
             <span className="text-sm font-bold text-purple-200">{reputation.toLocaleString()}</span>
           </div>
 
-          <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-1.5 rounded-full border border-yellow-600/30">
+          {/* Gold */}
+          <div className="flex items-center gap-2 md:gap-3 bg-gray-900/50 px-2.5 py-1 md:px-4 md:py-1.5 rounded-full border border-yellow-600/30">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider">Gold</span>
-              <span className={`text-lg font-mono font-bold text-yellow-100 transition-all ${animateGold ? 'text-yellow-300 scale-105' : ''}`}>
-                {gold.toLocaleString()} G
+              <span className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider hidden md:block">Gold</span>
+              <span className={`text-sm md:text-lg font-mono font-bold text-yellow-100 transition-all ${animateGold ? 'text-yellow-300 scale-105' : ''}`}>
+                {gold.toLocaleString()}<span className="md:hidden">G</span>
               </span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-700 flex items-center justify-center shadow-lg border border-yellow-300">
-              <Coins size={16} className="text-yellow-900" />
+            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-700 flex items-center justify-center shadow-lg border border-yellow-300">
+              <Coins size={14} className="text-yellow-900 md:w-4 md:h-4" />
             </div>
           </div>
+
+          {/* Menu Button */}
+          <button
+            onClick={onToggleMenu}
+            className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gray-800 text-white hover:bg-gray-700 border border-gray-600 flex items-center justify-center transition-transform active:scale-95 shadow-lg relative z-50"
+          >
+            <Menu size={20} />
+          </button>
         </div>
 
       </div>
 
       {/* Spacer or overlays can go here */}
-      <span className="absolute bottom-20 right-4 text-[10px] text-gray-600 font-mono">v2.1</span>
+      <span className="absolute bottom-20 right-4 text-[10px] text-gray-600 font-mono">v2.3</span>
     </div>
   );
 };
