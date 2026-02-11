@@ -57,18 +57,20 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
-    // Load individual sword images (Legacy support or high res)
+    // Load individual sword images (New location)
     for (let i = 0; i <= 21; i++) {
       const paddedIndex = i.toString().padStart(2, '0');
-      this.load.image(`sword_${i}`, `/assets/sword/sword_${paddedIndex}.png`);
+      this.load.image(`sword_${i}`, `/assets/weapon/sword/sword_${paddedIndex}.png`);
     }
 
-    // Load Spritesheets
-    // Approximate frame size based on 1280x683 sheet (~8 cols x 4 rows)
-    const frameConfig = { frameWidth: 160, frameHeight: 170 };
+    // Load individual axe images
+    for (let i = 0; i <= 21; i++) {
+      const paddedIndex = i.toString().padStart(2, '0');
+      this.load.image(`axe_${i}`, `/assets/weapon/axe/axe_${paddedIndex}.png`);
+    }
 
-    this.load.spritesheet('sheet_SWORD', '/assets/weapon/sword-sheet.png', frameConfig);
-    this.load.spritesheet('sheet_AXE', '/assets/weapon/axe-sheet.png', frameConfig);
+    // Load Spritesheets (Dagger only for now, or fallback)
+    const frameConfig = { frameWidth: 160, frameHeight: 170 };
     this.load.spritesheet('sheet_DAGGER', '/assets/weapon/dagger-sheet.png', frameConfig);
   }
 
@@ -296,53 +298,37 @@ export class MainScene extends Phaser.Scene {
 
   private updateSwordSprite() {
     const safeLevel = Math.min(this.currentLevel, 21);
+    const type = this.currentWeaponType; // SWORD, AXE, DAGGER
 
-    // Logic:
-    // If weaponType is SWORD, check if individual image exists?
-    // User requested "Use the 3 sheets".
-    // So we should try to use the sheets.
-    // However, if the sheet config (160x170) is wrong, it will look bad.
-    // For SWORD, we have the backup of individual images.
-    // For AXE/DAGGER, we must use sheets.
+    if (type === 'DAGGER') {
+      // Dagger still uses sheets for now (as user said "start with sword and axe")
+      const textureKey = `sheet_DAGGER`;
+      if (this.textures.exists(textureKey)) {
+        this.sword.setTexture(textureKey);
+        this.sword.setFrame(safeLevel);
+        const isMobile = this.scale.width < 768;
+        this.sword.setScale(isMobile ? 1.5 : 2.5);
+        return;
+      }
+    }
 
-    /* 
-       Note: The user provided 'sword-sheet', 'axe-sheet', 'dagger-sheet'.
-       We loaded them as 'sheet_SWORD', 'sheet_AXE', 'sheet_DAGGER'.
-    */
+    // For Sword and Axe (Individual Images)
+    // Key format: sword_0, axe_0
+    const textureKey = `${type.toLowerCase()}_${safeLevel}`;
 
-    let textureKey = `sheet_${this.currentWeaponType}`;
-
-    // Fallback?
+    // Fallback if texture missing
     if (!this.textures.exists(textureKey)) {
       console.warn(`Texture ${textureKey} missing, falling back to sword_0`);
-      textureKey = 'sword_0';
-      this.sword.setTexture(textureKey);
+      this.sword.setTexture('sword_0');
+      this.sword.setScale(0.75);
       return;
     }
 
-    // If using individual sword images (Legacy):
-    // if (this.currentWeaponType === 'SWORD' && USE_LEGACY) { ... }
-
-    // Using Sheet:
     this.sword.setTexture(textureKey);
-    this.sword.setFrame(safeLevel);
 
-    // If the frame size is small (160x170) vs individual sword (500x500?), 
-    // we might need to scale up to match the visual size on anvil.
-    // 0.75 scale on a 160px image = 120px displayed.
-    // 0.75 scale on a 500px image = 375px displayed.
-    // If the previous swords were large, we need to scale up the sheet sprites.
-    // I will guess we need to scale up by 2x or 3x if the sheet frames are small.
-    // Let's try 2.5x scale for sheet sprites.
-
-    // Determine if using sheet or unique image
-    if (textureKey.startsWith('sheet_')) {
-      const isMobile = this.scale.width < 768;
-      this.sword.setScale(isMobile ? 1.5 : 2.5);
-    } else {
-      const isMobile = this.scale.width < 768;
-      this.sword.setScale(isMobile ? 0.5 : 0.75);
-    }
+    // Scale logic
+    const isMobile = this.scale.width < 768;
+    this.sword.setScale(isMobile ? 0.4 : 0.6); // Slightly smaller if they are large images (500x500)
   }
 
   public resetLevel() {
