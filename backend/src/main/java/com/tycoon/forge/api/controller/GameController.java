@@ -51,4 +51,17 @@ public class GameController {
             @RequestParam int level) {
         return ResponseEntity.ok(enhanceService.getProbabilities(userPrincipal.getId(), level));
     }
+
+    @PostMapping("/select-weapon")
+    public ResponseEntity<Void> selectWeapon(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody WeaponSelectRequest request) {
+        gameService.selectWeapon(userPrincipal.getId(), request.getWeaponType());
+        return ResponseEntity.ok().build();
+    }
+
+    @Data
+    public static class WeaponSelectRequest {
+        private com.tycoon.forge.domain.contract.entity.WeaponType weaponType;
+    }
 }

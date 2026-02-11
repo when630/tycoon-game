@@ -10,6 +10,7 @@ import RelicModal from '../components/RelicModal';
 import InventoryModal from '../components/InventoryModal';
 import ProbabilityModal from '../components/ProbabilityModal';
 import client from '../api/client';
+import WeaponSelectionModal from '../components/WeaponSelectionModal';
 import { LogOut, Package, Trophy, Gem, ScrollText } from 'lucide-react';
 
 import LoadingScreen from '../components/LoadingScreen';
@@ -21,7 +22,9 @@ const Game: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("제작 준비 완료");
   const [statusType, setStatusType] = useState<'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY'>('NORMAL');
-  const [currentWeaponType, setCurrentWeaponType] = useState<string>('SWORD');
+  const [currentWeaponType, setCurrentWeaponType] = useState<string | null>(null);
+
+  const [isWeaponSelectionOpen, setIsWeaponSelectionOpen] = useState(false);
 
   const [isContractOfficeOpen, setIsContractOfficeOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
@@ -51,6 +54,11 @@ const Game: React.FC = () => {
       }
       if (res.data.currentWeaponType) {
         setCurrentWeaponType(res.data.currentWeaponType);
+        setIsWeaponSelectionOpen(false);
+      } else {
+        // If null (reset), open selection
+        setCurrentWeaponType(null); // Ensure it's null
+        setIsWeaponSelectionOpen(true);
       }
     } catch (e) {
       console.error("Failed to fetch user data", e);
@@ -89,6 +97,24 @@ const Game: React.FC = () => {
       console.error("Failed to add test gold", e);
       setStatusMessage("자금 지급 실패");
       setStatusType("FAIL");
+    }
+  };
+
+  const handleWeaponSelect = async (type: 'SWORD' | 'AXE' | 'DAGGER') => {
+    try {
+      await client.post('/api/v1/game/select-weapon', { weaponType: type });
+      setCurrentWeaponType(type);
+      setIsWeaponSelectionOpen(false);
+      setStatusMessage(`${type === 'SWORD' ? '검' : type === 'AXE' ? '도끼' : '단검'} 제작 시작!`);
+      setStatusType('NORMAL');
+
+      // Update Phaser
+      if (phaserRef.current) {
+        // Force update weapon type in Phaser if needed, usually passed via prop
+        // but prop update will trigger useEffect in PhaserGame
+      }
+    } catch (e) {
+      console.error("Failed to select weapon", e);
     }
   };
 
@@ -139,7 +165,7 @@ const Game: React.FC = () => {
           onGoldChange={handleGoldChange}
           onReputationChange={setReputation}
           onStatusChange={handleStatusChange}
-          weaponType={currentWeaponType}
+          weaponType={currentWeaponType || 'SWORD'} // Fallback to SWORD for render if null, but modal covers it
         />
       )}
 
@@ -189,6 +215,17 @@ const Game: React.FC = () => {
         isOpen={isProbabilityOpen}
         onClose={() => setIsProbabilityOpen(false)}
         currentLevel={currentLevel}
+      />
+
+      <WeaponSelectionModal
+        isOpen={isWeaponSelectionOpen}
+        onSelect={handleWeaponSelect}
+        onCancel={() => {
+          // Prevent closing if we really need a weapon? 
+          // If user cancels, they can't play. 
+          // Maybe just don't allow cancel if weapon is null?
+          if (currentWeaponType) setIsWeaponSelectionOpen(false);
+        }}
       />
 
       <ContractOfficeModal
