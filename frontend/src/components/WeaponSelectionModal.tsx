@@ -18,7 +18,7 @@ const WeaponSelectionModal: React.FC<WeaponSelectionModalProps> = ({ isOpen, onS
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70">
       <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-lg w-full text-white">
         <h2 className="text-2xl font-bold mb-4 text-center">무기 선택</h2>
         <p className="mb-6 text-center text-gray-300">강화할 무기 종류를 선택하세요.</p>
