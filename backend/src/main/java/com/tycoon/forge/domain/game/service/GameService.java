@@ -42,6 +42,9 @@ public class GameService {
         user.updateCurrentItemLevel(0);
         user.updateCurrentWeaponType(null);
 
+        return reward;
+    }
+
     @Transactional
     public void selectWeapon(UUID userId, com.tycoon.forge.domain.contract.entity.WeaponType weaponType) {
         User user = userRepository.findById(userId)
