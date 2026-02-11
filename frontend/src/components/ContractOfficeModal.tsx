@@ -179,9 +179,6 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
             disabled={loading}
             className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-gray-300 border border-gray-600 hover:border-gray-500 transition-colors"
           >
-            className="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded text-gray-300 border border-gray-600 hover:border-gray-500 transition-colors"
-              >
-            🔄 목록 갱신
             🔄 목록 갱신
           </button>
         </div>
