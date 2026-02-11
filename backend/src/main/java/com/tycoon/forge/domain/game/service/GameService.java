@@ -40,6 +40,7 @@ public class GameService {
 
         // Reset item level after selling
         user.updateCurrentItemLevel(0);
+        user.updateCurrentWeaponType(null);
 
         return reward;
     }

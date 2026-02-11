@@ -69,7 +69,7 @@ const ProbabilityModal: React.FC<ProbabilityModalProps> = ({ isOpen, onClose, cu
               <div className="bg-gray-800/50 p-3 rounded border border-green-900/50">
                 <div className="flex justify-between items-end mb-1">
                   <span className="text-green-400 font-bold">성공 확률</span>
-                  <span className="text-2xl font-black text-green-400">{(data.successRate * 100).toFixed(1)}%</span>
+                  <span className="text-2xl font-black text-green-400">{Math.min(data.successRate * 100, 100).toFixed(1)}%</span>
                 </div>
                 {data.relicSuccessBonus > 0 && (
                   <div className="text-xs text-right text-green-600/70 border-t border-green-900/30 pt-1">

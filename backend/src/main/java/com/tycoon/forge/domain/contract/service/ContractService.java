@@ -174,6 +174,10 @@ public class ContractService {
 
             user.addGold(reward.add(bonus));
             user.updateReputation(contract.getTargetLevel() * 10);
+
+            // Reset Item Level and Weapon Type after completion
+            user.updateCurrentItemLevel(0);
+            user.updateCurrentWeaponType(null);
         } else {
             throw new IllegalArgumentException("목표 등급에 도달하지 못했습니다.");
         }
