@@ -40,14 +40,20 @@ public class Contract extends BaseTimeEntity {
     @Column(length = 20)
     private ContractStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private WeaponType weaponType;
+
     @Builder
-    public Contract(User user, int targetLevel, BigInteger rewardGold, BigInteger penaltyGold, LocalDateTime timeLimit) {
+    public Contract(User user, int targetLevel, BigInteger rewardGold, BigInteger penaltyGold, LocalDateTime timeLimit,
+            WeaponType weaponType) {
         this.user = user;
         this.targetLevel = targetLevel;
         this.rewardGold = rewardGold;
         this.penaltyGold = penaltyGold;
         this.timeLimit = timeLimit;
         this.status = ContractStatus.PENDING;
+        this.weaponType = weaponType != null ? weaponType : WeaponType.SWORD;
     }
 
     public void complete() {
@@ -58,9 +64,10 @@ public class Contract extends BaseTimeEntity {
         this.status = ContractStatus.FAILED;
     }
 
-    public void accept() {
+    public void accept(WeaponType weaponType) {
         if (this.status == ContractStatus.AVAILABLE) {
             this.status = ContractStatus.PENDING;
+            this.weaponType = weaponType;
         } else {
             throw new IllegalStateException("수주 가능한 의뢰가 아닙니다.");
         }

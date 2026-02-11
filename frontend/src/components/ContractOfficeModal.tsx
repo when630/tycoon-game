@@ -3,6 +3,9 @@ import client from '../api/client';
 import GameModal from './GameModal';
 import MessageModal from './MessageModal';
 import ConfirmModal from './ConfirmModal';
+import WeaponSelectionModal from './WeaponSelectionModal';
+
+type WeaponType = 'SWORD' | 'AXE' | 'DAGGER';
 
 interface Contract {
   id: number;
@@ -34,6 +37,9 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
     message: '',
     onConfirm: () => { }
   });
+
+  const [isWeaponSelectionOpen, setIsWeaponSelectionOpen] = useState(false);
+  const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -99,22 +105,33 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
     });
   };
 
-  const handleAccept = async (id: number) => {
+  const handleAcceptClick = (id: number) => {
     if (loading) return;
+    setSelectedContractId(id);
+    setIsWeaponSelectionOpen(true);
+  };
+
+  const handleWeaponSelect = async (weaponType: WeaponType) => {
+    if (selectedContractId === null || loading) return;
+
     setLoading(true);
+    setIsWeaponSelectionOpen(false); // Close modal first
+
     try {
-      await client.post(`/api/v1/contract/accept/${id}`);
+      await client.post(`/api/v1/contract/accept/${selectedContractId}`, {
+        weaponType: weaponType
+      });
 
       setMessageModal({
         isOpen: true,
-        message: "의뢰를 수주했습니다!",
+        message: `${weaponType === 'SWORD' ? '검' : weaponType === 'AXE' ? '도끼' : '단검'} 제작 의뢰를 수주했습니다!`,
         type: 'SUCCESS'
       });
 
       onAccept(); // Refresh parent state
 
       // Remove accepted from local list locally to reflect immediately
-      setContracts(prev => prev.filter(c => c.id !== id));
+      setContracts(prev => prev.filter(c => c.id !== selectedContractId));
 
     } catch (e: any) {
       console.error(e);
@@ -125,6 +142,7 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
       });
     } finally {
       setLoading(false);
+      setSelectedContractId(null);
     }
   };
 
@@ -188,7 +206,7 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
                       <div className="text-gray-500">위약금 <span className="text-gray-400 ml-1">-{contract.penaltyGold.toLocaleString()} G</span></div>
                     </div>
                     <button
-                      onClick={() => handleAccept(contract.id)}
+                      onClick={() => handleAcceptClick(contract.id)}
                       className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-bold shadow-lg shadow-blue-900/50 transition-transform active:scale-95"
                     >
                       ✍️ 수주하기
@@ -213,6 +231,12 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
         message={confirmModal.message}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <WeaponSelectionModal
+        isOpen={isWeaponSelectionOpen}
+        onSelect={handleWeaponSelect}
+        onCancel={() => setIsWeaponSelectionOpen(false)}
       />
     </>
   );

@@ -2,6 +2,7 @@ package com.tycoon.forge.domain.contract.dto;
 
 import com.tycoon.forge.domain.contract.entity.Contract;
 import com.tycoon.forge.domain.contract.entity.ContractStatus;
+import com.tycoon.forge.domain.contract.entity.WeaponType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,6 +20,7 @@ public class ContractDto {
         private BigInteger penaltyGold;
         private LocalDateTime timeLimit;
         private ContractStatus status;
+        private WeaponType weaponType;
 
         public static Response from(Contract contract) {
             return Response.builder()
@@ -28,6 +30,7 @@ public class ContractDto {
                     .penaltyGold(contract.getPenaltyGold())
                     .timeLimit(contract.getTimeLimit())
                     .status(contract.getStatus())
+                    .weaponType(contract.getWeaponType())
                     .build();
         }
     }

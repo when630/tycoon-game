@@ -21,6 +21,7 @@ const Game: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("제작 준비 완료");
   const [statusType, setStatusType] = useState<'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY'>('NORMAL');
+  const [currentWeaponType, setCurrentWeaponType] = useState<string>('SWORD');
 
   const [isContractOfficeOpen, setIsContractOfficeOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
@@ -44,8 +45,12 @@ const Game: React.FC = () => {
       const res = await client.get('/api/v1/user/me');
       setGold(res.data.gold);
       setReputation(res.data.reputation);
+      setReputation(res.data.reputation);
       if (res.data.currentItemLevel !== undefined) {
         setCurrentLevel(res.data.currentItemLevel);
+      }
+      if (res.data.currentWeaponType) {
+        setCurrentWeaponType(res.data.currentWeaponType);
       }
     } catch (e) {
       console.error("Failed to fetch user data", e);
@@ -134,6 +139,7 @@ const Game: React.FC = () => {
           onGoldChange={handleGoldChange}
           onReputationChange={setReputation}
           onStatusChange={handleStatusChange}
+          weaponType={currentWeaponType}
         />
       )}
 

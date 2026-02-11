@@ -1,5 +1,6 @@
 package com.tycoon.forge.domain.user.entity;
 
+import com.tycoon.forge.domain.contract.entity.WeaponType;
 import com.tycoon.forge.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,6 +40,11 @@ public class User extends BaseTimeEntity {
     @Column(name = "current_item_level", nullable = false)
     private int currentItemLevel = 0;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_weapon_type", length = 20)
+    private WeaponType currentWeaponType = WeaponType.SWORD;
+
     @Column(length = 20)
     private String provider; // KAKAO, GOOGLE, etc.
 
@@ -74,5 +80,9 @@ public class User extends BaseTimeEntity {
 
     public void updateCurrentItemLevel(int level) {
         this.currentItemLevel = level;
+    }
+
+    public void updateCurrentWeaponType(WeaponType weaponType) {
+        this.currentWeaponType = weaponType;
     }
 }

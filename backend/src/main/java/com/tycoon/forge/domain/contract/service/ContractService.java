@@ -34,14 +34,16 @@ public class ContractService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // Clear existing AVAILABLE contracts (refresh pool)
-        List<Contract> existingAvailable = contractRepository.findAllByUserIdAndStatus(userId, ContractStatus.AVAILABLE);
-        // Clean up old available contracts (mark as failed or just delete? marking failed for history)
-        for(Contract c : existingAvailable) {
-            c.fail(); 
+        List<Contract> existingAvailable = contractRepository.findAllByUserIdAndStatus(userId,
+                ContractStatus.AVAILABLE);
+        // Clean up old available contracts (mark as failed or just delete? marking
+        // failed for history)
+        for (Contract c : existingAvailable) {
+            c.fail();
         }
 
         List<ContractDto.Response> newContracts = new ArrayList<>();
-        
+
         // Generate 3 new contracts
         for (int i = 0; i < 3; i++) {
             Contract contract = createSingleContract(user);
@@ -62,34 +64,38 @@ public class ContractService {
         } else if (reputation < 500) {
             baseTarget = 6 + random.nextInt(4); // 6~9
         } else if (reputation < 1000) {
-             baseTarget = 10 + random.nextInt(4); // 10~13
+            baseTarget = 10 + random.nextInt(4); // 10~13
         } else if (reputation < 2000) {
-             baseTarget = 14 + random.nextInt(3); // 14~16 (Very Hard)
+            baseTarget = 14 + random.nextInt(3); // 14~16 (Very Hard)
         } else {
-             baseTarget = 17 + random.nextInt(4); // 17~20 (Hell)
+            baseTarget = 17 + random.nextInt(4); // 17~20 (Hell)
         }
 
         // Slight variation
         baseTarget += random.nextInt(3) - 1; // -1, 0, +1
-        if (baseTarget < 1) baseTarget = 1;
+        if (baseTarget < 1)
+            baseTarget = 1;
 
         long estimatedCost = 0;
         for (int i = 0; i < baseTarget; i++) {
-             long stepCost = 100L * (long) Math.pow(i + 1, 2);
-             double difficultyMultiplier = 1.0;
-             if (i >= 5) difficultyMultiplier = 1.5; 
-             if (i >= 10) difficultyMultiplier = 3.0;
-             if (i >= 15) difficultyMultiplier = 5.0; // Extreme scaling
-             estimatedCost += (long) (stepCost * difficultyMultiplier);
+            long stepCost = 100L * (long) Math.pow(i + 1, 2);
+            double difficultyMultiplier = 1.0;
+            if (i >= 5)
+                difficultyMultiplier = 1.5;
+            if (i >= 10)
+                difficultyMultiplier = 3.0;
+            if (i >= 15)
+                difficultyMultiplier = 5.0; // Extreme scaling
+            estimatedCost += (long) (stepCost * difficultyMultiplier);
         }
 
         long rewardVal = (long) (estimatedCost * 1.5);
-        
+
         // Bonus reward for higher reputation
         if (reputation >= 1000) {
             rewardVal = (long) (rewardVal * 1.2);
         }
-        
+
         long penaltyVal = rewardVal / 3;
 
         return Contract.builder()
@@ -99,7 +105,7 @@ public class ContractService {
                 .penaltyGold(BigInteger.valueOf(penaltyVal))
                 .build();
     }
-    
+
     @Transactional(readOnly = true)
     public List<ContractDto.Response> getAvailableContracts(UUID userId) {
         return contractRepository.findAllByUserIdAndStatus(userId, ContractStatus.AVAILABLE).stream()
@@ -108,15 +114,30 @@ public class ContractService {
     }
 
     @Transactional
-    public ContractDto.Response acceptContract(UUID userId, Long contractId) {
+    public ContractDto.Response acceptContract(UUID userId, Long contractId,
+            com.tycoon.forge.domain.contract.entity.WeaponType weaponType) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new IllegalArgumentException("의뢰를 찾을 수 없습니다."));
-        
+
         if (!contract.getUser().getId().equals(userId)) {
-             throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
+            throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
         }
 
-        contract.accept(); // Changes status to PENDING
+        // Update contract status and set selected weapon type
+        // Note: We need a setter for weaponType in Contract entity or a method to
+        // update it
+        // Since we only have 'accept()', we might need to add a method or modify
+        // 'accept'
+        // For now, let's assume we need to add a setter or update method in
+        // Contract.java first.
+        // Actually, let's look at Contract.java again. It has @Getter but no @Setter.
+        // I will add a method 'accept(WeaponType type)' to Contract.java first.
+
+        contract.accept(weaponType);
+
+        // Sync User's current weapon choice
+        contract.getUser().updateCurrentWeaponType(weaponType);
+
         return ContractDto.Response.from(contract);
     }
 
@@ -133,9 +154,9 @@ public class ContractService {
                 .orElseThrow(() -> new IllegalArgumentException("의뢰를 찾을 수 없습니다."));
 
         if (!contract.getUser().getId().equals(userId)) {
-             throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
+            throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
         }
-        
+
         if (contract.getStatus() != ContractStatus.PENDING) {
             throw new IllegalStateException("진행 중인 의뢰가 아닙니다.");
         }
@@ -144,18 +165,19 @@ public class ContractService {
 
         if (currentItemLevel >= contract.getTargetLevel()) {
             contract.complete();
-            
+
             // Relic Bonus: MERCHANT_CERTIFICATE
             double bonusPercent = relicService.getEffectMultiplier(userId, RelicType.MERCHANT_CERTIFICATE);
             BigInteger reward = contract.getRewardGold();
-            BigInteger bonus = new java.math.BigDecimal(reward).multiply(java.math.BigDecimal.valueOf(bonusPercent)).toBigInteger();
-            
+            BigInteger bonus = new java.math.BigDecimal(reward).multiply(java.math.BigDecimal.valueOf(bonusPercent))
+                    .toBigInteger();
+
             user.addGold(reward.add(bonus));
             user.updateReputation(contract.getTargetLevel() * 10);
         } else {
             throw new IllegalArgumentException("목표 등급에 도달하지 못했습니다.");
         }
-        
+
         return ContractDto.Response.from(contract);
     }
 
@@ -165,22 +187,22 @@ public class ContractService {
                 .orElseThrow(() -> new IllegalArgumentException("의뢰를 찾을 수 없습니다."));
 
         if (!contract.getUser().getId().equals(userId)) {
-             throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
+            throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
         }
-        
+
         if (contract.getStatus() != ContractStatus.PENDING) {
             throw new IllegalStateException("진행 중인 의뢰가 아닙니다.");
         }
 
         contract.fail(); // Mark as FAILED or create a CANCELED status (Going with fail/cancel concept)
-        
+
         User user = contract.getUser();
         // Big Penalty
-        user.decreaseReputation(100); 
-        // Potentially check if reputation goes below 0? 
-        // Current User entity decreas just subtracts. 
+        user.decreaseReputation(100);
+        // Potentially check if reputation goes below 0?
+        // Current User entity decreas just subtracts.
         // Let's assume negative reputation is possible/allowed or handled there.
-        
+
         return ContractDto.Response.from(contract);
     }
 }

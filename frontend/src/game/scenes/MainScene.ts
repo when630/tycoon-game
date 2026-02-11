@@ -24,22 +24,29 @@ export class MainScene extends Phaser.Scene {
   private onReputationChange?: (reputation: number) => void;
   private onStatusChange?: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void;
 
+  private currentWeaponType: string = 'SWORD';
+
   constructor() {
     super({ key: 'MainScene' });
   }
 
   public setCallbacks(
     onLevelChange: (level: number) => void,
-    // onSellRequest: () => void, // Removed
     onGoldChange: (gold: number) => void,
     onReputationChange: (reputation: number) => void,
     onStatusChange: (message: string, type: 'NORMAL' | 'SUCCESS' | 'FAIL' | 'DESTROY') => void
   ) {
     this.onLevelChange = onLevelChange;
-    // this.onSellRequest = onSellRequest; // Removed
     this.onGoldChange = onGoldChange;
     this.onReputationChange = onReputationChange;
     this.onStatusChange = onStatusChange;
+  }
+
+  public setWeaponType(type: string) {
+    if (this.currentWeaponType !== type) {
+      this.currentWeaponType = type;
+      this.updateSwordSprite();
+    }
   }
 
   preload() {
@@ -50,11 +57,19 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
-    // Load individual sword images (0 to 21)
+    // Load individual sword images (Legacy support or high res)
     for (let i = 0; i <= 21; i++) {
       const paddedIndex = i.toString().padStart(2, '0');
       this.load.image(`sword_${i}`, `/assets/sword/sword_${paddedIndex}.png`);
     }
+
+    // Load Spritesheets
+    // Approximate frame size based on 1280x683 sheet (~8 cols x 4 rows)
+    const frameConfig = { frameWidth: 160, frameHeight: 170 };
+
+    this.load.spritesheet('sheet_SWORD', '/assets/weapon/sword-sheet.png', frameConfig);
+    this.load.spritesheet('sheet_AXE', '/assets/weapon/axe-sheet.png', frameConfig);
+    this.load.spritesheet('sheet_DAGGER', '/assets/weapon/dagger-sheet.png', frameConfig);
   }
 
   init(data: { currentLevel: number }) {
@@ -64,9 +79,6 @@ export class MainScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
-    // Initialize state from Registry if not set via init (though create runs after init)
-    // Priority: init date > registry > default
-    // Since we aren't using scene.start(data), init data is empty.
     const registryLevel = this.registry.get('initialLevel');
     if (registryLevel !== undefined) {
       this.currentLevel = registryLevel;
@@ -81,12 +93,13 @@ export class MainScene extends Phaser.Scene {
     this.anvil = this.add.image(width / 2, height / 2 + 100, 'anvil');
     this.anvil.setScale(0.5);
 
-    // 3. Sword 
-    // Determine initial sprite based on currentLevel
-    const safeLevel = Math.min(this.currentLevel, 21);
-    this.sword = this.add.sprite(width / 2, height / 2 + 60, `sword_${safeLevel}`);
-    this.sword.setScale(0.75); // Increased from 0.5
+    // 3. Weapon Sprite
+    this.sword = this.add.sprite(width / 2, height / 2 + 60, `sword_0`); // Default
+    this.sword.setScale(0.75);
     this.sword.setOrigin(0.5, 1);
+
+    // Initialize correct texture
+    this.updateSwordSprite();
 
     // 4. Hammer
     this.hammer = this.add.image(width / 2 + 80, height / 2 - 20, 'hammer');
@@ -146,9 +159,15 @@ export class MainScene extends Phaser.Scene {
     this.anvil.setScale(isMobile ? 0.25 : 0.5);
 
     // 3. Sword
-    const swordY = anvilY - (isMobile ? 20 : 40); // Slightly above anvil center
+    const swordY = anvilY - (isMobile ? 20 : 40);
     this.sword.setPosition(centerX, swordY);
-    this.sword.setScale(isMobile ? 0.5 : 0.75); // Increased from 0.35/0.5
+    // Adjustment for spritesheets which might be smaller/larger
+    // If using individual swords, 0.75 was fine.
+    // If using spritesheets (160x170), they are likely smaller than the high-res swords?
+    // High res swords (370KB) might be 500px?
+    // If we switch to sheet, we might need to SCAL UP.
+    // Let's keep 0.75/0.5 for now and adjust via feedback or 'scale' tween.
+    this.sword.setScale(isMobile ? 0.5 : 0.75);
 
     // 4. Hammer
     const hammerX = centerX + (isMobile ? 50 : 80);
@@ -159,14 +178,9 @@ export class MainScene extends Phaser.Scene {
 
   // Public methods triggered by React
   public async enhance() {
-    // Prevent double clicking or action when input disabled
     if (!this.input.enabled) return;
 
-    // Visual Feedback: Hammer Animation
     this.playHammerAnimation();
-
-    // Temporarily disable further input logic if needed, 
-    // though React side should likely handle disable state too.
     this.input.enabled = false;
 
     if (this.onStatusChange) this.onStatusChange('제작 중...', 'NORMAL');
@@ -196,20 +210,10 @@ export class MainScene extends Phaser.Scene {
   }
 
   public async sell() {
-    // This might not be needed if React handles the UI directly, 
-    // but we might want to keep some Phaser state logic here.
-    // Actually, standardizing: React calls this to trigger any visual effect if needed?
-    // Or just use React to call API and update Phaser via callback?
-    // Let's keep the actual API call in React for Sell since it involves a Modal.
-    // But if we want to trigger sword disappearing animation, we need a method.
-
-    // For now, let's just use this method to trigger an effect if we sold it.
-    // React -> Sell Modal -> API Success -> Phaser.onSellComplete()
+    // Placeholder
   }
 
-  // Called when sell is confirmed in React
   public onSellComplete() {
-    // Play sell sound or effect?
     this.successEmitter.explode(50, this.sword.x, this.sword.y);
     this.resetLevel();
   }
@@ -227,7 +231,6 @@ export class MainScene extends Phaser.Scene {
 
   private playHammerAnimation() {
     this.hammer.setVisible(true);
-    // Position is set in resize, but good to ensure
     const width = this.scale.width;
     const height = this.scale.height;
     const isMobile = width < 768;
@@ -250,7 +253,6 @@ export class MainScene extends Phaser.Scene {
       }
     });
 
-    // Camera shake on impact (simulated)
     this.time.addEvent({
       delay: 150,
       repeat: 2,
@@ -275,25 +277,10 @@ export class MainScene extends Phaser.Scene {
     this.updateSwordSprite();
 
     if (result === 'SUCCESS') {
-      // Success Effect: Particles & Scale
       this.successEmitter.explode(50, this.sword.x, this.sword.y - 100);
-
-      // Animation removed by user request
-      /*
-      this.tweens.add({
-        targets: this.sword,
-        scaleX: 0.85, 
-        scaleY: 0.85, 
-        duration: 200,
-        yoyo: true,
-      });
-      */
-
     } else if (result === 'FAIL') {
       this.cameras.main.shake(100, 0.01);
-
       this.failEmitter.explode(30, this.sword.x, this.sword.y - 50);
-
     } else if (result === 'DESTROY') {
       this.cameras.main.shake(300, 0.05);
 
@@ -308,30 +295,66 @@ export class MainScene extends Phaser.Scene {
   }
 
   private updateSwordSprite() {
-    // Change frame based on level
-    // Change texture based on level
-    // Cap at level 21 because we only have images up to sword_21
     const safeLevel = Math.min(this.currentLevel, 21);
-    this.sword.setTexture(`sword_${safeLevel}`);
-  }
 
-  // Getter helper properties due to scope issues in callbacks
-  get width() { return this.scale.width; }
-  get height() { return this.scale.height; }
+    // Logic:
+    // If weaponType is SWORD, check if individual image exists?
+    // User requested "Use the 3 sheets".
+    // So we should try to use the sheets.
+    // However, if the sheet config (160x170) is wrong, it will look bad.
+    // For SWORD, we have the backup of individual images.
+    // For AXE/DAGGER, we must use sheets.
+
+    /* 
+       Note: The user provided 'sword-sheet', 'axe-sheet', 'dagger-sheet'.
+       We loaded them as 'sheet_SWORD', 'sheet_AXE', 'sheet_DAGGER'.
+    */
+
+    let textureKey = `sheet_${this.currentWeaponType}`;
+
+    // Fallback?
+    if (!this.textures.exists(textureKey)) {
+      console.warn(`Texture ${textureKey} missing, falling back to sword_0`);
+      textureKey = 'sword_0';
+      this.sword.setTexture(textureKey);
+      return;
+    }
+
+    // If using individual sword images (Legacy):
+    // if (this.currentWeaponType === 'SWORD' && USE_LEGACY) { ... }
+
+    // Using Sheet:
+    this.sword.setTexture(textureKey);
+    this.sword.setFrame(safeLevel);
+
+    // If the frame size is small (160x170) vs individual sword (500x500?), 
+    // we might need to scale up to match the visual size on anvil.
+    // 0.75 scale on a 160px image = 120px displayed.
+    // 0.75 scale on a 500px image = 375px displayed.
+    // If the previous swords were large, we need to scale up the sheet sprites.
+    // I will guess we need to scale up by 2x or 3x if the sheet frames are small.
+    // Let's try 2.5x scale for sheet sprites.
+
+    // Determine if using sheet or unique image
+    if (textureKey.startsWith('sheet_')) {
+      const isMobile = this.scale.width < 768;
+      this.sword.setScale(isMobile ? 1.5 : 2.5);
+    } else {
+      const isMobile = this.scale.width < 768;
+      this.sword.setScale(isMobile ? 0.5 : 0.75);
+    }
+  }
 
   public resetLevel() {
     this.currentLevel = 0;
-
-    // Reset visual
     this.updateSwordSprite();
-
     if (this.onLevelChange) {
       this.onLevelChange(this.currentLevel);
     }
-
-    // Optional: Reset effect
     this.cameras.main.flash(500, 255, 255, 255);
-
     if (this.onStatusChange) this.onStatusChange('새로운 의뢰를 위해 초기화', 'NORMAL');
   }
+
+  get width() { return this.scale.width; }
+  get height() { return this.scale.height; }
 }
