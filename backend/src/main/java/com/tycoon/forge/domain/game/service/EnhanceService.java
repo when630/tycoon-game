@@ -59,6 +59,9 @@ public class EnhanceService {
         long reducedCostVal = (long) (costVal * (1.0 - costReduction));
         BigInteger enhanceCost = BigInteger.valueOf(reducedCostVal);
 
+        System.out.println("Enhance Debug: Level=" + currentLevel + ", Base=" + itemBaseValue + ", Cost=" + enhanceCost
+                + ", UserGold=" + user.getGold());
+
         if (user.getGold().compareTo(enhanceCost) < 0) {
             throw new IllegalStateException("골드가 부족합니다.");
         }
