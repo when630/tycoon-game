@@ -58,13 +58,13 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
     // Load individual sword images (New location)
-    for (let i = 0; i <= 21; i++) {
+    for (let i = 0; i <= 20; i++) {
       const paddedIndex = i.toString().padStart(2, '0');
       this.load.image(`sword_${i}`, `/assets/weapon/sword/sword_${paddedIndex}.png`);
     }
 
     // Load individual axe images
-    for (let i = 0; i <= 21; i++) {
+    for (let i = 0; i <= 20; i++) {
       const paddedIndex = i.toString().padStart(2, '0');
       this.load.image(`axe_${i}`, `/assets/weapon/axe/axe_${paddedIndex}.png`);
     }
@@ -232,6 +232,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private playHammerAnimation() {
+    if (!this.hammer) return;
     this.hammer.setVisible(true);
     const width = this.scale.width;
     const height = this.scale.height;
@@ -297,6 +298,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private updateSwordSprite() {
+    if (!this.sword) return; // Safety check
     const safeLevel = Math.min(this.currentLevel, 21);
     const type = this.currentWeaponType; // SWORD, AXE, DAGGER
 

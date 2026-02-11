@@ -60,11 +60,11 @@ class EnhanceServiceTest {
         int currentLevel = 0;
         BigInteger baseValue = BigInteger.valueOf(100);
         EnhanceDto.Request request = new EnhanceDto.Request(baseValue, currentLevel);
-        
+
         // Cost: 100 * (0 + 1)^2 = 100
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(relicService.getEffectMultiplier(any(), any())).willReturn(0.0);
-        
+
         // Success Logic: Level 0 -> 99% success rate
         // random.nextDouble() < 0.99 -> Success
         given(random.nextDouble()).willReturn(0.5); // 0.5 < 0.99
@@ -78,7 +78,7 @@ class EnhanceServiceTest {
         assertThat(testUser.getHighestLevel()).isEqualTo(1);
         assertThat(testUser.getGold()).isEqualByComparingTo(BigInteger.valueOf(9900)); // 10000 - 100
         assertThat(testUser.getReputation()).isEqualTo(6); // 5 + 1
-        
+
         verify(userRepository).save(testUser);
     }
 
@@ -88,7 +88,7 @@ class EnhanceServiceTest {
         // Given
         testUser.setGold(BigInteger.ZERO);
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
-        
+
         EnhanceDto.Request request = new EnhanceDto.Request(BigInteger.valueOf(100), 0);
 
         // When & Then
@@ -103,11 +103,12 @@ class EnhanceServiceTest {
         // Given
         int currentLevel = 10;
         testUser.setHighestLevel(10);
+        testUser.updateCurrentItemLevel(10);
         BigInteger baseValue = BigInteger.valueOf(100);
-        
+
         // Cost: 100 * 11^2 = 12100 -> Need more gold for test
         testUser.setGold(BigInteger.valueOf(20000));
-        
+
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(relicService.getEffectMultiplier(any(), any())).willReturn(0.0);
 
@@ -115,7 +116,7 @@ class EnhanceServiceTest {
         // Success: 45% (0.45)
         // Destroy: 1% (0.01) -> 0.45 ~ 0.46
         // Fail: Above 0.46
-        given(random.nextDouble()).willReturn(0.8); 
+        given(random.nextDouble()).willReturn(0.8);
 
         // When
         EnhanceDto.Response response = enhanceService.enhance(userId, new EnhanceDto.Request(baseValue, currentLevel));
@@ -132,18 +133,20 @@ class EnhanceServiceTest {
         // Given
         int currentLevel = 15;
         testUser.setHighestLevel(15);
+        testUser.updateCurrentItemLevel(15);
         testUser.setGold(BigInteger.valueOf(100000));
-        
+
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
         given(relicService.getEffectMultiplier(any(), any())).willReturn(0.0);
-        
+
         // Logic Level 15
         // Success: 10% (0.10)
         // Destroy: 20% (0.20) -> 0.10 ~ 0.30
         given(random.nextDouble()).willReturn(0.15); // Hits Destroy range
 
         // When
-        EnhanceDto.Response response = enhanceService.enhance(userId, new EnhanceDto.Request(BigInteger.valueOf(100), currentLevel));
+        EnhanceDto.Response response = enhanceService.enhance(userId,
+                new EnhanceDto.Request(BigInteger.valueOf(100), currentLevel));
 
         // Then
         assertThat(response.getResult()).isEqualTo(EnhanceDto.Result.DESTROY);
@@ -156,7 +159,7 @@ class EnhanceServiceTest {
     void enhance_Relic_CostDiscount() {
         // Given
         given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
-        
+
         // 50% discount
         given(relicService.getEffectMultiplier(userId, RelicType.ANCIENT_ANVIL)).willReturn(0.5);
         given(random.nextDouble()).willReturn(0.0); // Success
@@ -164,11 +167,33 @@ class EnhanceServiceTest {
         EnhanceDto.Request request = new EnhanceDto.Request(BigInteger.valueOf(100), 0);
         // Original Cost: 100
         // Discounted: 50
-        
+
         // When
         enhanceService.enhance(userId, request);
 
         // Then
         assertThat(testUser.getGold()).isEqualByComparingTo(BigInteger.valueOf(9950));
+    }
+
+    @Test
+    @DisplayName("유물 효과: 비용 할인 최대 100% (오버플로우 방지)")
+    void enhance_Relic_CostDiscount_Cap() {
+        // Given
+        given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
+
+        // 120% discount (Level 24 Ancient Anvil)
+        given(relicService.getEffectMultiplier(userId, RelicType.ANCIENT_ANVIL)).willReturn(1.2);
+        given(random.nextDouble()).willReturn(0.0); // Success
+
+        EnhanceDto.Request request = new EnhanceDto.Request(BigInteger.valueOf(100), 0);
+        // Original Cost: 100
+        // Discounted: 0 (Capped at 100%) - Should NOT be negative
+
+        // When
+        enhanceService.enhance(userId, request);
+
+        // Then
+        // Gold should match original (cost 0)
+        assertThat(testUser.getGold()).isEqualByComparingTo(BigInteger.valueOf(10000));
     }
 }

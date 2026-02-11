@@ -56,11 +56,12 @@ public class EnhanceService {
         // Relic Effect: ANCIENT_ANVIL (Cost Reduction)
         double costReduction = relicService.getEffectMultiplier(userId,
                 com.tycoon.forge.domain.relic.entity.RelicType.ANCIENT_ANVIL);
+
+        // Cap reduction at 100% (free) to prevent negative cost (gaining gold)
+        costReduction = Math.min(costReduction, 1.0);
+
         long reducedCostVal = (long) (costVal * (1.0 - costReduction));
         BigInteger enhanceCost = BigInteger.valueOf(reducedCostVal);
-
-        System.out.println("Enhance Debug: Level=" + currentLevel + ", Base=" + itemBaseValue + ", Cost=" + enhanceCost
-                + ", UserGold=" + user.getGold());
 
         if (user.getGold().compareTo(enhanceCost) < 0) {
             throw new IllegalStateException("골드가 부족합니다.");
