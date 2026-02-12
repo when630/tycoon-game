@@ -57,6 +57,19 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
+    // Event listener for lazy loaded assets
+    this.load.on('filecomplete', (key: string) => {
+      // Check if the loaded file is relevant to the current weapon display
+      const currentKey = `${this.currentWeaponType.toLowerCase()}_${Math.min(this.currentLevel, 20)}`;
+      if (key === currentKey) {
+        // console.log(`Asset loaded: ${key}, updating sprite`);
+        this.updateSwordSprite();
+      }
+    });
+
+    // Start background loading of other assets
+    this.lazyLoadAssets();
+
     // Load base weapons only (Lazy load the rest)
     this.load.image('sword_0', '/assets/weapon/sword/sword_00.png');
     this.load.image('axe_0', '/assets/weapon/axe/axe_00.png');
