@@ -14,7 +14,7 @@ const WeaponSelectionModal: React.FC<WeaponSelectionModalProps> = ({ isOpen, onS
   const weapons: { type: WeaponType; label: string; image?: string }[] = [
     { type: 'SWORD', label: '검', image: '/assets/weapon/sword/sword_00.png' },
     { type: 'AXE', label: '도끼', image: '/assets/weapon/axe/axe_00.png' },
-    { type: 'DAGGER', label: '단검', image: '/assets/weapon/dagger-sheet.png' },
+    { type: 'DAGGER', label: '단검', image: '/assets/weapon/dagger/dagger_00.png' },
   ];
 
   return (
@@ -31,21 +31,11 @@ const WeaponSelectionModal: React.FC<WeaponSelectionModalProps> = ({ isOpen, onS
               className="flex flex-col items-center p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border border-transparent hover:border-yellow-500 transition-all"
             >
               <div className="w-16 h-16 mb-2 bg-gray-900 rounded flex items-center justify-center overflow-hidden relative">
-                {weapon.type === 'DAGGER' ? (
-                  // Dagger is a sheet, so we use object-fit/position to show the first frame
-                  <img
-                    src={weapon.image}
-                    alt={weapon.label}
-                    className="w-full h-full object-cover object-left-top"
-                  />
-                ) : (
-                  // Sword and Axe are individual large images, scale them down nicely
-                  <img
-                    src={weapon.image}
-                    alt={weapon.label}
-                    className="w-full h-full object-contain p-1"
-                  />
-                )}
+                <img
+                  src={weapon.image}
+                  alt={weapon.label}
+                  className="w-full h-full object-contain p-1"
+                />
               </div>
               <span className="font-bold">{weapon.label}</span>
             </button>
