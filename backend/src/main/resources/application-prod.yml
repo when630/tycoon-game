@@ -4,7 +4,7 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:mysql://yamabiko.proxy.rlwy.net:24607/railway
+    url: jdbc:mysql://yamabiko.proxy.rlwy.net:24607/railway?useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true
     username: root
     password: jvoGWIXVeNkXmUMLNbBnFyxhVErqZjaW
     driver-class-name: com.mysql.cj.jdbc.Driver
