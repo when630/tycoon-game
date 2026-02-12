@@ -67,13 +67,15 @@ export class MainScene extends Phaser.Scene {
       }
     });
 
-    // Start background loading of other assets
-    this.lazyLoadAssets();
-
     // Load base weapons only (Lazy load the rest)
     this.load.image('sword_0', '/assets/weapon/sword/sword_00.png');
     this.load.image('axe_0', '/assets/weapon/axe/axe_00.png');
     this.load.image('dagger_0', '/assets/weapon/dagger/dagger_00.png');
+  }
+
+  create() {
+    // Resize Handler
+    this.scale.on('resize', this.handleResize, this);
   }
 
   /* ... */
@@ -130,11 +132,13 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    // console.log('UpdateSword:', textureKey, this.textures.exists(textureKey));
+
     this.sword.setTexture(textureKey);
 
     // Scale logic
     const isMobile = this.scale.width < 768;
-    this.sword.setScale(isMobile ? 0.4 : 0.6); // Slightly smaller if they are large images (500x500)
+    this.sword.setScale(isMobile ? 0.5 : 0.75); // Restored to 0.75
   }
 
   public resetLevel() {
