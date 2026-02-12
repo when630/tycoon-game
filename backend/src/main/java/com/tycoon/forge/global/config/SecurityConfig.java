@@ -49,16 +49,22 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        // Allow specific origins including the production frontend
-        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
+
+        // Exact match for origins
+        configuration.setAllowedOrigins(java.util.Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "https://front-production-4837.up.railway.app",
-                "https://*.up.railway.app" // Allow other railway subdomains if needed
+                "https://tycoon-game-production.up.railway.app" // Allow self just in case
         ));
-        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+
+        configuration
+                .setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(java.util.Collections.singletonList("*"));
+        configuration.setExposedHeaders(java.util.Collections.singletonList("Authorization")); // Expose headers if
+                                                                                               // needed
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Cache preflight response for 1 hour
 
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
