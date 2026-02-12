@@ -49,7 +49,13 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOriginPatterns(java.util.Collections.singletonList("*"));
+        // Allow specific origins including the production frontend
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://front-production-4837.up.railway.app",
+                "https://*.up.railway.app" // Allow other railway subdomains if needed
+        ));
         configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(java.util.Collections.singletonList("*"));
         configuration.setAllowCredentials(true);
