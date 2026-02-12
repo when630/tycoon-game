@@ -57,17 +57,9 @@ export class MainScene extends Phaser.Scene {
     this.load.image('particle_failure', '/assets/particle_failure.png');
     this.load.image('particle_destroyed', '/assets/particle_destroyed.png');
 
-    // Load individual sword images (New location)
-    for (let i = 0; i <= 20; i++) {
-      const paddedIndex = i.toString().padStart(2, '0');
-      this.load.image(`sword_${i}`, `/assets/weapon/sword/sword_${paddedIndex}.png`);
-    }
-
-    // Load individual axe images
-    for (let i = 0; i <= 20; i++) {
-      const paddedIndex = i.toString().padStart(2, '0');
-      this.load.image(`axe_${i}`, `/assets/weapon/axe/axe_${paddedIndex}.png`);
-    }
+    // Load base weapons only (Lazy load the rest)
+    this.load.image('sword_0', '/assets/weapon/sword/sword_00.png');
+    this.load.image('axe_0', '/assets/weapon/axe/axe_00.png');
 
     // Load Spritesheets (Dagger only for now, or fallback)
     const frameConfig = { frameWidth: 160, frameHeight: 170 };
@@ -85,6 +77,9 @@ export class MainScene extends Phaser.Scene {
     if (registryLevel !== undefined) {
       this.currentLevel = registryLevel;
     }
+
+    // Start background loading of other assets
+    this.lazyLoadAssets();
 
     // 1. Background
     this.background = this.add.image(width / 2, height / 2, 'background');
@@ -141,6 +136,31 @@ export class MainScene extends Phaser.Scene {
 
     // Resize Handler
     this.scale.on('resize', this.handleResize, this);
+  }
+
+  private lazyLoadAssets() {
+    // Load remaining sword images
+    const totalWeapons = 20;
+
+    // Sword
+    for (let i = 1; i <= totalWeapons; i++) {
+      const paddedIndex = i.toString().padStart(2, '0');
+      const key = `sword_${i}`;
+      if (!this.textures.exists(key)) {
+        this.load.image(key, `/assets/weapon/sword/sword_${paddedIndex}.png`);
+      }
+    }
+
+    // Axe
+    for (let i = 1; i <= totalWeapons; i++) {
+      const paddedIndex = i.toString().padStart(2, '0');
+      const key = `axe_${i}`;
+      if (!this.textures.exists(key)) {
+        this.load.image(key, `/assets/weapon/axe/axe_${paddedIndex}.png`);
+      }
+    }
+
+    this.load.start();
   }
 
   private handleResize(gameSize: Phaser.Structs.Size) {
@@ -320,8 +340,12 @@ export class MainScene extends Phaser.Scene {
 
     // Fallback if texture missing
     if (!this.textures.exists(textureKey)) {
-      console.warn(`Texture ${textureKey} missing, falling back to sword_0`);
-      this.sword.setTexture('sword_0');
+      // console.warn(`Texture ${textureKey} missing, falling back to sword_0`);
+      // Use level 0 as fallback, but keep asking for the correct one just in case 
+      // (though lazyLoadAssets should handle it)
+      this.sword.setTexture(`${type.toLowerCase()}_0`);
+
+      // If we are mostly keeping 0.75, use that.
       this.sword.setScale(0.75);
       return;
     }
