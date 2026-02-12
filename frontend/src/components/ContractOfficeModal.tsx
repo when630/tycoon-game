@@ -10,6 +10,7 @@ interface Contract {
   rewardGold: number;
   penaltyGold: number;
   status: 'AVAILABLE' | 'PENDING' | 'COMPLETED' | 'FAILED';
+  weaponType: 'SWORD' | 'AXE' | 'DAGGER';
 }
 
 interface ContractOfficeModalProps {
@@ -52,6 +53,7 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
       } else {
         // If none, generate new ones
         const genRes = await client.post('/api/v1/contract/available/generate');
+
         setContracts(genRes.data);
         assignNpcImages(genRes.data);
       }
@@ -99,45 +101,22 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
     });
   };
 
+  const getWeaponLabel = (type: string) => {
+    switch (type) {
+      case 'SWORD': return '검';
+      case 'AXE': return '도끼';
+      case 'DAGGER': return '단검';
+      default: return '무기';
+    }
+  };
+
   const handleAcceptClick = async (id: number) => {
     if (loading) return;
     setLoading(true);
 
     try {
-      // Just accept without weapon type (defaults or handled later? User said "initialize on delivery/sell")
-      // But accept endpoint might expect weaponType?
-      // Actually the user said "We pick weapon AFTER reset".
-      // So when accepting, does it matter?
-      // Existing API expects weaponType. We should probably send CURRENT weaponType or just 'SWORD' as placeholder if valid?
-      // Or maybe the backend acceptContract shouldn't require it anymore?
-      // For now, let's send 'SWORD' or the current user's weapon type if we had access.
-      // But wait, the previous code sent the *selected* type.
-      // If we remove selection here, what do we send?
-      // PROPOSAL: Send 'SWORD' as dummy or modify backend to not require it. 
-      // User said "Not receiving/selecting at contract office".
-      // Let's send the *User's current weapon* if possible? But we don't have it here.
-      // Let's send 'SWORD' for now and assume the separate Selection Logic handles the *actual* crafting weapon.
-      // ERRORRISK: If backend sets user weapon to this value, it might overwrite the user's choice.
-      // But the user *just* said selection happens on reset.
-      // If I am accepting a contract, I might be mid-progress on a weapon. 
-      // Accepting shouldn't change my weapon.
-
-      // We need to check the backend Accept logic.
-      // Backend: acceptContract updates user.currentWeaponType.
-      // This is problematic if we want to separate them.
-      // However, we can just pass the *current* weapon if we knew it.
-      // Since we don't, let's assume the user MUST have a weapon selected (handled by Game.tsx).
-      // So we can send a dummy value, or better, modify backend to NOT update weapon on accept.
-      // But I can't modify backend easily right now without checking implications.
-      // Let's keep it simple: Pass 'SWORD' but relying on the fact that `completeContract` RESETS it to null.
-      // So when they finish this contract, it resets.
-      // But wait, if I accept a contract, does it force me to use a specific weapon?
-      // The contract has no weapon requirement in the Entity (it was discussed but maybe not added/enforced?)
-      // Let's look at Contract.java... It has `targetLevel` but no `weaponType` field in the entity?
-      // I saw `WeaponType` being passed to `acceptContract` in service.
-
       await client.post(`/api/v1/contract/accept/${id}`, {
-        weaponType: 'SWORD' // Dummy
+        weaponType: 'SWORD' // Dummy value, backend uses contract's weaponType
       });
 
       setMessageModal({
@@ -207,11 +186,11 @@ const ContractOfficeModal: React.FC<ContractOfficeModalProps> = ({ isOpen, onClo
                         의뢰 요청서 #{contract.id}
                       </span>
                       <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded border border-blue-800">
-                        목표: +{contract.targetLevel}강
+                        목표: +{contract.targetLevel}강 {getWeaponLabel(contract.weaponType)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-400 italic mb-2">
-                      "이봐, <strong>+{contract.targetLevel}강 검</strong>을 만들어 줄 수 있나?"
+                      "이봐, <strong>+{contract.targetLevel}강 {getWeaponLabel(contract.weaponType)}</strong>을 만들어 줄 수 있나?"
                     </p>
                   </div>
 

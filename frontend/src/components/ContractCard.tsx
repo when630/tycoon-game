@@ -10,6 +10,7 @@ interface Contract {
   rewardGold: number;
   penaltyGold: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  weaponType: 'SWORD' | 'AXE' | 'DAGGER';
 }
 
 interface ContractCardProps {
@@ -129,6 +130,15 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete, o
     }
   };
 
+  const getWeaponLabel = (type: string) => {
+    switch (type) {
+      case 'SWORD': return '검';
+      case 'AXE': return '도끼';
+      case 'DAGGER': return '단검';
+      default: return '무기';
+    }
+  };
+
   if (contracts.length === 0) {
     return (
       <div className="absolute top-24 right-4 w-64 p-4 bg-gray-800 bg-opacity-90 border-4 border-gray-600 rounded shadow-lg text-white font-mono z-10 animate-pulse text-center">
@@ -193,7 +203,7 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete, o
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-baseline">
-                <span className="font-bold text-[#5c3a21] text-sm">+{contract.targetLevel}강 납품</span>
+                <span className="font-bold text-[#5c3a21] text-sm">+{contract.targetLevel}강 {getWeaponLabel(contract.weaponType)} 납품</span>
                 <span className="text-green-700 font-bold text-xs">{contract.rewardGold.toLocaleString()} G</span>
               </div>
               <div className="text-xs text-gray-600 truncate">
@@ -257,4 +267,3 @@ const ContractCard: React.FC<ContractCardProps> = ({ currentLevel, onComplete, o
 };
 
 export default ContractCard;
-

@@ -98,11 +98,18 @@ public class ContractService {
 
         long penaltyVal = rewardVal / 3;
 
+        // Random Weapon Type
+        com.tycoon.forge.domain.contract.entity.WeaponType[] weaponTypes = com.tycoon.forge.domain.contract.entity.WeaponType
+                .values();
+        com.tycoon.forge.domain.contract.entity.WeaponType selectedWeapon = weaponTypes[random
+                .nextInt(weaponTypes.length)];
+
         return Contract.builder()
                 .user(user)
                 .targetLevel(baseTarget)
                 .rewardGold(BigInteger.valueOf(rewardVal))
                 .penaltyGold(BigInteger.valueOf(penaltyVal))
+                .weaponType(selectedWeapon)
                 .build();
     }
 
@@ -115,7 +122,7 @@ public class ContractService {
 
     @Transactional
     public ContractDto.Response acceptContract(UUID userId, Long contractId,
-            com.tycoon.forge.domain.contract.entity.WeaponType weaponType) {
+            com.tycoon.forge.domain.contract.entity.WeaponType ignoredWeaponType) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new IllegalArgumentException("의뢰를 찾을 수 없습니다."));
 
@@ -123,20 +130,10 @@ public class ContractService {
             throw new IllegalArgumentException("당신의 의뢰가 아닙니다.");
         }
 
-        // Update contract status and set selected weapon type
-        // Note: We need a setter for weaponType in Contract entity or a method to
-        // update it
-        // Since we only have 'accept()', we might need to add a method or modify
-        // 'accept'
-        // For now, let's assume we need to add a setter or update method in
-        // Contract.java first.
-        // Actually, let's look at Contract.java again. It has @Getter but no @Setter.
-        // I will add a method 'accept(WeaponType type)' to Contract.java first.
+        // Use the weapon type defined in the contract itself
+        com.tycoon.forge.domain.contract.entity.WeaponType contractWeaponType = contract.getWeaponType();
 
-        contract.accept(weaponType);
-
-        // Sync User's current weapon choice
-        contract.getUser().updateCurrentWeaponType(weaponType);
+        contract.accept(contractWeaponType);
 
         return ContractDto.Response.from(contract);
     }
@@ -162,6 +159,10 @@ public class ContractService {
         }
 
         User user = contract.getUser();
+
+        if (contract.getWeaponType() != user.getCurrentWeaponType()) {
+            throw new IllegalArgumentException("잘못된 무기 종류입니다. 요구사항: " + contract.getWeaponType());
+        }
 
         if (currentItemLevel >= contract.getTargetLevel()) {
             contract.complete();
